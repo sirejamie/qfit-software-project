@@ -1,2 +1,2 @@
-# qfit-software-project
+# QFit
 QFit Software Project
