@@ -78,7 +78,11 @@ def enter(user_id: str):
 
 @app.post("/gym/leave/{user_id}")
 def leave(user_id: str):
-    gym_users.pop(user_id, None)
+    if user_id not in gym_users:
+        return {"status": "not_in_gym"}
+    gym_users.pop(user_id)
     while queue and len(gym_users) < MAX_CAPACITY:  # promote next in line
         gym_users[queue.pop(0)] = datetime.now()
     return {"status": "left"}
+
+
