@@ -3,6 +3,7 @@ import heroImg from './assets/hero.png'
 import javascriptLogo from './assets/javascript.svg'
 import viteLogo from './assets/vite.svg'
 import { setupCounter } from './counter.js'
+import { setupWaitingTime } from './waitingTime.js'
 
 document.querySelector('#app').innerHTML = `
 <section id="center">
@@ -58,3 +59,6 @@ document.querySelector('#app').innerHTML = `
 `
 
 setupCounter(document.querySelector('#counter'))
+const waitingEl = document.createElement('div')
+document.querySelector('#app').appendChild(waitingEl)
+setupWaitingTime(waitingEl, 'user1')
