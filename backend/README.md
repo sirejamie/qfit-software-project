@@ -19,7 +19,7 @@ Check if `uv` exists and validate the version
 uv --version
 ```
 
-Download all dependencies
+Download all dependencies (Go to the backend folder first)
 
 ```sh
 uv sync
