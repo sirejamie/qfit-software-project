@@ -14,10 +14,14 @@ Frontend Folder
 
 ## Commands
 
-Download all your dependencies
+Download all your dependencies (Go to the frontend folder first)
 
 ```sh
 npm install
+```
+
+```sh
+npm ci
 ```
 
 Run demo
