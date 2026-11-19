@@ -10,8 +10,10 @@ document.querySelector("#app").innerHTML = `
   </main>
 `;
 
-// Start a demonstration timer
 renderUserTimer(
   document.querySelector("#user-timer"),
-  60
+  {
+    demo: true,
+    durationMinutes: 60
+  }
 );
