@@ -4,6 +4,7 @@ from math import ceil
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+#allows the frontend to call the backend
 app = FastAPI(title="Gym Queue API")
 app.add_middleware(
     CORSMiddleware,
@@ -12,14 +13,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-MAX_CAPACITY = 5
-AVG_WORKOUT_MINUTES = 60
-
-gym_users: dict[str, datetime] = {}  # user_id -> entry time
-queue: list[str] = []                # user_ids waiting, in order
+MAX_CAPACITY = 20 #maximum amount of individuals in the gym 
+AVG_WORKOUT_MINUTES = 60 #maximum amount of minutes and individual can spend in the gym 
 
 
-# ---------- core logic ----------
+gym_users: dict[str, datetime] = {}  # people inside the gym
+queue: list[str] = []                #students waiting in the queue
+
+
 def get_queue_count() -> int:                      # SR-1
     return len(queue)
 
@@ -42,7 +43,6 @@ def calculate_wait_minutes(position: int) -> int:  # SR-2
     return ceil(remaining[i] + wave * AVG_WORKOUT_MINUTES)
 
 
-# ---------- endpoints ----------
 @app.get("/queue/count")
 def queue_count():
     return {"queue_length": get_queue_count()}
@@ -56,7 +56,7 @@ def wait_time(user_id: str | None = None):
     if user_id in queue:
         position = queue.index(user_id) + 1
     else:
-        position = len(queue) + 1  # where they'd be if they joined now
+        position = len(queue) + 1  # where student would be if they joined now
     return {
         "qr_active": False,
         "queue_length": get_queue_count(),
@@ -81,7 +81,7 @@ def leave(user_id: str):
     if user_id not in gym_users:
         return {"status": "not_in_gym"}
     gym_users.pop(user_id)
-    while queue and len(gym_users) < MAX_CAPACITY:  # promote next in line
+    while queue and len(gym_users) < MAX_CAPACITY:  #this is where the queue updates
         gym_users[queue.pop(0)] = datetime.now()
     return {"status": "left"}
 
