@@ -8,24 +8,7 @@ Frontend Folder
 * CSS
 * JavaScript
 
-## Dependencies
+## Demonstration
 
-* vite
+All thats necessary for the presentation would just be opening `index.html` in a browser.
 
-## Commands
-
-Download all your dependencies (Go to the frontend folder first)
-
-```sh
-npm install
-```
-
-```sh
-npm ci
-```
-
-Run demo
-
-```sh
-npm run dev
-```
