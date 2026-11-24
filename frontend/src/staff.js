@@ -374,7 +374,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Quick Walk-in Add
   if (btnQuickWalkin) {
-    btnQuickWalkin.addEventListener('click', () => {
+    btnQuickWalkin.addEventListener('click', async () => {
       const sampleNames = ['Toni-Ann Smith', 'Daniel Campbell', 'Joshua White', 'Renee Miller', 'Darius Morgan'];
       const randomName = sampleNames[Math.floor(Math.random() * sampleNames.length)];
       const randomId = '620' + Math.floor(100000 + Math.random() * 900000);

@@ -4,6 +4,8 @@
  * and real-time cross-tab updates via BroadcastChannel.
  */
 
+// ---
+
 const STORAGE_KEYS = {
   QUEUE: 'qfit_v4_students_queue',
   WAITLIST: 'qfit_v4_students_waitlist',
@@ -402,7 +404,7 @@ class QFitStore {
     };
   }
 
-  promoteFromWaitlist(studentId) {
+  async promoteFromWaitlist(studentId) {
     let waitlist = this.getWaitlist();
     const student = waitlist.find(s => s.studentId === studentId || s.id === studentId);
     if (!student) return false;

@@ -1,396 +1,661 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>QFIT - Login Portal</title>
-  <link rel="stylesheet" href="public/css/styles.css">
-  <style>
-    .auth-page-bg {
-      min-height: 100vh;
-      width: 100%;
-      background: var(--white);
-      display: flex;
-      flex-direction: column;
-      margin: 0;
-      padding: 0;
-    }
-    .modal-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.55);
-      backdrop-filter: blur(4px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 100;
-      padding: 1rem;
-    }
-    .modal-card {
-      background: var(--white);
-      max-width: 480px;
-      width: 100%;
-      border-radius: var(--radius-lg);
-      padding: 2rem;
-      box-shadow: var(--shadow-xl);
-      border: 1px solid var(--gray-200);
-      position: relative;
-    }
-    .modal-close {
-      position: absolute;
-      top: 1rem;
-      right: 1.25rem;
-      background: none;
-      border: none;
-      font-size: 1.5rem;
-      cursor: pointer;
-      color: var(--gray-400);
-    }
-    .modal-close:hover {
-      color: var(--gray-700);
-    }
-  </style>
-</head>
-<body class="auth-page-bg">
-
-  <!-- Split-Screen Login Card (Modeled after Reference Guide) -->
-  <div class="split-auth-card">
-
-    <!-- Left Panel: Graphic Branding -->
-    <div class="split-auth-left">
-      <!-- Smooth Motion Ambient Wave -->
-      <svg class="split-wave-bg" viewBox="0 0 1200 120" preserveAspectRatio="none">
-        <path d="M0,0 C150,90 350,-40 500,45 C650,130 900,10 1200,50 L1200,120 L0,120 Z" fill="#ffffff"></path>
-      </svg>
-
-      <div style="z-index: 2;">
-        <div style="margin-bottom: 2.5rem;">
-          <span class="brand-logo" style="background: var(--white); color: var(--primary-600); box-shadow: none; font-size: 1.5rem; padding: 0.35rem 1rem;">QFIT</span>
-        </div>
-        <h2>Welcome to QFIT</h2>
-        <p>
-          The smart management and occupancy control software for the UWI Mona Gym.
-        </p>
-      </div>
-
-      <div style="font-size: 0.8rem; opacity: 0.85; letter-spacing: 0.3px; z-index: 2;">
-        &copy; 2026 - 2027 QFIT - All Rights Reserved.
-      </div>
-    </div>
-
-    <!-- Right Panel: Login Form -->
-    <div class="split-auth-right">
-      <div class="split-auth-form-wrap">
-        <h2 class="split-auth-title">Login</h2>
-        <p class="split-auth-subtitle">Welcome! Sign in to access the staff or student portal.</p>
-
-      <!-- Error Message Banner (Clarity Reference Design) -->
-      <div id="login-error-banner" class="alert alert-danger" style="display: none;">
-        <span style="font-size: 1.15rem;">⚠️</span>
-        <span id="login-error-text">Incorrect username or password. Try again.</span>
-      </div>
-
-      <!-- Success / Redirect Message -->
-      <div id="login-success-banner" class="alert alert-success" style="display: none;">
-        <span>✅</span>
-        <span id="login-success-text">Logging in...</span>
-      </div>
-
-      <form id="form-login">
-        <div class="form-group">
-          <label class="form-label" for="login-id">User Name / ID</label>
-          <input type="text" id="login-id" class="form-control" placeholder="Student ID or Staff ID" required autocomplete="username">
-        </div>
-
-        <div class="form-group" style="margin-bottom: 0.85rem;">
-          <label class="form-label" for="login-password">Password</label>
-          <input type="password" id="login-password" class="form-control" placeholder="Enter your password" required autocomplete="current-password">
-        </div>
-
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; font-size: 0.85rem;">
-          <label style="display: flex; align-items: center; gap: 0.4rem; color: var(--gray-700); cursor: pointer;">
-            <input type="checkbox" id="login-remember" checked>
-            Remember me
-          </label>
-          <a href="#" id="link-forgot-password" style="color: var(--primary-600); font-weight: 600; text-decoration: none;">
-            Forgot your password?
-          </a>
-        </div>
-
-        <button type="submit" id="btn-login-submit" class="btn btn-primary btn-block" style="font-size: 1.05rem; padding: 0.85rem;">
-          LOGIN
-        </button>
-
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; font-size: 0.875rem; border-top: 1px solid var(--gray-200); padding-top: 1.25rem;">
-          <span style="color: var(--gray-600);">New User? <a href="#" id="link-signup" style="color: var(--primary-600); font-weight: 700; text-decoration: none;">Signup</a></span>
-          <a href="index.html" style="color: var(--gray-500); text-decoration: none; font-size: 0.8rem;">&larr; Back to Welcome</a>
-        </div>
-      </form>
-
-      <!-- Discreet Demo Accounts Helper -->
-      <div style="margin-top: 1.5rem; padding: 0.75rem; background: var(--gray-50); border: 1px solid var(--gray-200); border-radius: var(--radius-md); font-size: 0.775rem;">
-        <span style="font-weight: 800; color: var(--gray-700); text-transform: uppercase;">Demo Accounts:</span>
-        <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.4rem;">
-          <button type="button" class="btn btn-secondary btn-sm" id="btn-quick-staff" style="flex: 1; font-size: 0.75rem;">
-            Staff: <strong>STAFF101</strong>
-          </button>
-          <button type="button" class="btn btn-secondary btn-sm" id="btn-quick-student" style="flex: 1; font-size: 0.75rem;">
-            Student 1: <strong>620123456</strong>
-          </button>
-          <button type="button" class="btn btn-secondary btn-sm" id="btn-quick-student-2" style="flex: 1; font-size: 0.75rem;">
-            Student 2: <strong>620198765</strong>
-          </button>
-        </div>
-      </div>
-
-      </div>
-    </div>
-
-  </div>
-
-  <!-- MODAL: CREATE ACCOUNT (SIGNUP) -->
-  <div id="modal-signup" class="modal-overlay" style="display: none;">
-    <div class="modal-card">
-      <button class="modal-close" id="btn-close-signup">&times;</button>
-      <h3 style="font-size: 1.4rem; font-weight: 900; color: var(--gray-900); margin-bottom: 0.35rem;">Create an Account</h3>
-      <p style="font-size: 0.85rem; color: var(--gray-500); margin-bottom: 1.25rem;">Register as a student or staff member for gym access.</p>
-
-      <div id="signup-error-banner" class="alert alert-danger" style="display: none;">
-        <span>⚠️</span>
-        <span id="signup-error-text"></span>
-      </div>
-
-      <div id="signup-success-banner" class="alert alert-success" style="display: none;">
-        <span>✅</span>
-        <span id="signup-success-text"></span>
-      </div>
-
-      <form id="form-signup">
-        <div class="form-group">
-          <label class="form-label" for="signup-role">Role</label>
-          <select id="signup-role" class="form-control" required>
-            <option value="student" selected>Student</option>
-            <option value="staff">Gym Staff</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="signup-fullname">Full Name</label>
-          <input type="text" id="signup-fullname" class="form-control" placeholder="e.g. Shaneil Clarke" required>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="signup-id">ID Number</label>
-          <input type="text" id="signup-id" class="form-control" placeholder="9-digit Student ID or Staff ID" required>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="signup-password">Password</label>
-          <input type="password" id="signup-password" class="form-control" placeholder="At least 4 characters" required minlength="4">
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="signup-confirm-password">Confirm Password</label>
-          <input type="password" id="signup-confirm-password" class="form-control" placeholder="Re-enter password" required minlength="4">
-        </div>
-
-        <button type="submit" class="btn btn-primary btn-block" style="margin-top: 1rem;">
-          Register Account &rarr;
-        </button>
-      </form>
-    </div>
-  </div>
-
-  <!-- MODAL: FORGOT PASSWORD -->
-  <div id="modal-forgot" class="modal-overlay" style="display: none;">
-    <div class="modal-card">
-      <button class="modal-close" id="btn-close-forgot">&times;</button>
-      <h3 style="font-size: 1.4rem; font-weight: 900; color: var(--gray-900); margin-bottom: 0.35rem;">Reset Password</h3>
-      <p style="font-size: 0.85rem; color: var(--gray-500); margin-bottom: 1.25rem;">Enter your registered ID or email to set a new password.</p>
-
-      <div id="forgot-alert-banner" class="alert alert-danger" style="display: none;">
-        <span id="forgot-alert-icon">⚠️</span>
-        <span id="forgot-alert-text"></span>
-      </div>
-
-      <form id="form-forgot">
-        <div class="form-group">
-          <label class="form-label" for="forgot-id">ID Number or Email</label>
-          <input type="text" id="forgot-id" class="form-control" placeholder="e.g. 620123456 or STAFF101" required>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="forgot-new-password">New Password</label>
-          <input type="password" id="forgot-new-password" class="form-control" placeholder="Enter new password" required minlength="4">
-        </div>
-
-        <button type="submit" class="btn btn-primary btn-block" style="margin-top: 1rem;">
-          Update Password &rarr;
-        </button>
-      </form>
-    </div>
-  </div>
-
-  <script src="public/js/auth.js"></script>
-  <script src="public/js/store.js"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const formLogin = document.getElementById('form-login');
-      const inputLoginId = document.getElementById('login-id');
-      const inputLoginPass = document.getElementById('login-password');
-      const errorBanner = document.getElementById('login-error-banner');
-      const errorText = document.getElementById('login-error-text');
-      const successBanner = document.getElementById('login-success-banner');
-      const successText = document.getElementById('login-success-text');
-
-      // Demo quick fills
-      document.getElementById('btn-quick-staff').addEventListener('click', () => {
-        inputLoginId.value = 'STAFF101';
-        inputLoginPass.value = 'staff123';
-        clearErrors();
-        inputLoginId.focus();
-      });
-
-      document.getElementById('btn-quick-student').addEventListener('click', () => {
-        inputLoginId.value = '620123456';
-        inputLoginPass.value = 'student123';
-        clearErrors();
-        inputLoginId.focus();
-      });
-
-      document.getElementById('btn-quick-student-2').addEventListener('click', () => {
-        inputLoginId.value = '620198765';
-        inputLoginPass.value = 'student123';
-        clearErrors();
-        inputLoginId.focus();
-      });
-
-      function clearErrors() {
-        errorBanner.style.display = 'none';
-        successBanner.style.display = 'none';
-        inputLoginId.classList.remove('is-invalid');
-        inputLoginPass.classList.remove('is-invalid');
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>QFIT - Login Portal</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+    <style>
+      .auth-page-bg {
+        min-height: 100vh;
+        width: 100%;
+        background: var(--white);
+        display: flex;
+        flex-direction: column;
+        margin: 0;
+        padding: 0;
       }
+      .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.55);
+        backdrop-filter: blur(4px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 100;
+        padding: 1rem;
+      }
+      .modal-card {
+        background: var(--white);
+        max-width: 480px;
+        width: 100%;
+        border-radius: var(--radius-lg);
+        padding: 2rem;
+        box-shadow: var(--shadow-xl);
+        border: 1px solid var(--gray-200);
+        position: relative;
+      }
+      .modal-close {
+        position: absolute;
+        top: 1rem;
+        right: 1.25rem;
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: var(--gray-400);
+      }
+      .modal-close:hover {
+        color: var(--gray-700);
+      }
+    </style>
+  </head>
+  <body class="auth-page-bg">
+    <!-- Split-Screen Login Card (Modeled after Reference Guide) -->
+    <div class="split-auth-card">
+      <!-- Left Panel: Graphic Branding -->
+      <div class="split-auth-left">
+        <!-- Smooth Motion Ambient Wave -->
+        <svg
+          class="split-wave-bg"
+          viewBox="0 0 1200 120"
+          preserveAspectRatio="none"
+        >
+          <path
+            d="M0,0 C150,90 350,-40 500,45 C650,130 900,10 1200,50 L1200,120 L0,120 Z"
+            fill="#ffffff"
+          ></path>
+        </svg>
 
-      formLogin.addEventListener('submit', (e) => {
-        e.preventDefault();
-        clearErrors();
+        <div style="z-index: 2">
+          <div style="margin-bottom: 2.5rem">
+            <span
+              class="brand-logo"
+              style="
+                background: var(--white);
+                color: var(--primary-600);
+                box-shadow: none;
+                font-size: 1.5rem;
+                padding: 0.35rem 1rem;
+              "
+              >QFIT</span
+            >
+          </div>
+          <h2>Welcome to QFIT</h2>
+          <p>
+            The smart management and occupancy control software for the UWI Mona
+            Gym.
+          </p>
+        </div>
 
-        const id = inputLoginId.value.trim();
-        const pass = inputLoginPass.value.trim();
+        <div
+          style="
+            font-size: 0.8rem;
+            opacity: 0.85;
+            letter-spacing: 0.3px;
+            z-index: 2;
+          "
+        >
+          &copy; 2026 - 2027 QFIT - All Rights Reserved.
+        </div>
+      </div>
 
-        const result = window.QFitAuth.login(id, pass);
+      <!-- Right Panel: Login Form -->
+      <div class="split-auth-right">
+        <div class="split-auth-form-wrap">
+          <h2 class="split-auth-title">Login</h2>
+          <p class="split-auth-subtitle">
+            Welcome! Sign in to access the staff or student portal.
+          </p>
 
-        if (result.success) {
-          successText.textContent = `Successfully signed in as ${result.user.fullName}`;
-          successBanner.style.display = 'flex';
-          setTimeout(() => {
-            window.location.href = result.redirectUrl;
-          }, 600);
-        } else {
-          errorText.textContent = result.error;
-          errorBanner.style.display = 'flex';
-          inputLoginId.classList.add('is-invalid');
-          inputLoginPass.classList.add('is-invalid');
+          <!-- Error Message Banner (Clarity Reference Design) -->
+          <div
+            id="login-error-banner"
+            class="alert alert-danger"
+            style="display: none"
+          >
+            <span style="font-size: 1.15rem">⚠️</span>
+            <span id="login-error-text"
+              >Incorrect username or password. Try again.</span
+            >
+          </div>
+
+          <!-- Success / Redirect Message -->
+          <div
+            id="login-success-banner"
+            class="alert alert-success"
+            style="display: none"
+          >
+            <span>✅</span>
+            <span id="login-success-text">Logging in...</span>
+          </div>
+
+          <form id="form-login">
+            <div class="form-group">
+              <label class="form-label" for="login-id">User Name / ID</label>
+              <input
+                type="text"
+                id="login-id"
+                class="form-control"
+                placeholder="Student ID or Staff ID"
+                required
+                autocomplete="username"
+              />
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0.85rem">
+              <label class="form-label" for="login-password">Password</label>
+              <input
+                type="password"
+                id="login-password"
+                class="form-control"
+                placeholder="Enter your password"
+                required
+                autocomplete="current-password"
+              />
+            </div>
+
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 1.5rem;
+                font-size: 0.85rem;
+              "
+            >
+              <label
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 0.4rem;
+                  color: var(--gray-700);
+                  cursor: pointer;
+                "
+              >
+                <input type="checkbox" id="login-remember" checked />
+                Remember me
+              </label>
+              <a
+                href="#"
+                id="link-forgot-password"
+                style="
+                  color: var(--primary-600);
+                  font-weight: 600;
+                  text-decoration: none;
+                "
+              >
+                Forgot your password?
+              </a>
+            </div>
+
+            <button
+              type="submit"
+              id="btn-login-submit"
+              class="btn btn-primary btn-block"
+              style="font-size: 1.05rem; padding: 0.85rem"
+            >
+              LOGIN
+            </button>
+
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-top: 1.5rem;
+                font-size: 0.875rem;
+                border-top: 1px solid var(--gray-200);
+                padding-top: 1.25rem;
+              "
+            >
+              <span style="color: var(--gray-600)"
+                >New User?
+                <a
+                  href="#"
+                  id="link-signup"
+                  style="
+                    color: var(--primary-600);
+                    font-weight: 700;
+                    text-decoration: none;
+                  "
+                  >Signup</a
+                ></span
+              >
+              <a
+                href="index.html"
+                style="
+                  color: var(--gray-500);
+                  text-decoration: none;
+                  font-size: 0.8rem;
+                "
+                >&larr; Back to Welcome</a
+              >
+            </div>
+          </form>
+
+          <!-- Discreet Demo Accounts Helper -->
+          <div
+            style="
+              margin-top: 1.5rem;
+              padding: 0.75rem;
+              background: var(--gray-50);
+              border: 1px solid var(--gray-200);
+              border-radius: var(--radius-md);
+              font-size: 0.775rem;
+            "
+          >
+            <span
+              style="
+                font-weight: 800;
+                color: var(--gray-700);
+                text-transform: uppercase;
+              "
+              >Demo Accounts:</span
+            >
+            <div
+              style="
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.5rem;
+                margin-top: 0.4rem;
+              "
+            >
+              <button
+                type="button"
+                class="btn btn-secondary btn-sm"
+                id="btn-quick-staff"
+                style="flex: 1; font-size: 0.75rem"
+              >
+                Staff: <strong>STAFF101</strong>
+              </button>
+              <button
+                type="button"
+                class="btn btn-secondary btn-sm"
+                id="btn-quick-student"
+                style="flex: 1; font-size: 0.75rem"
+              >
+                Student 1: <strong>620123456</strong>
+              </button>
+              <button
+                type="button"
+                class="btn btn-secondary btn-sm"
+                id="btn-quick-student-2"
+                style="flex: 1; font-size: 0.75rem"
+              >
+                Student 2: <strong>620198765</strong>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL: CREATE ACCOUNT (SIGNUP) -->
+    <div id="modal-signup" class="modal-overlay" style="display: none">
+      <div class="modal-card">
+        <button class="modal-close" id="btn-close-signup">&times;</button>
+        <h3
+          style="
+            font-size: 1.4rem;
+            font-weight: 900;
+            color: var(--gray-900);
+            margin-bottom: 0.35rem;
+          "
+        >
+          Create an Account
+        </h3>
+        <p
+          style="
+            font-size: 0.85rem;
+            color: var(--gray-500);
+            margin-bottom: 1.25rem;
+          "
+        >
+          Register as a student or staff member for gym access.
+        </p>
+
+        <div
+          id="signup-error-banner"
+          class="alert alert-danger"
+          style="display: none"
+        >
+          <span>⚠️</span>
+          <span id="signup-error-text"></span>
+        </div>
+
+        <div
+          id="signup-success-banner"
+          class="alert alert-success"
+          style="display: none"
+        >
+          <span>✅</span>
+          <span id="signup-success-text"></span>
+        </div>
+
+        <form id="form-signup">
+          <div class="form-group">
+            <label class="form-label" for="signup-role">Role</label>
+            <select id="signup-role" class="form-control" required>
+              <option value="student" selected>Student</option>
+              <option value="staff">Gym Staff</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="signup-fullname">Full Name</label>
+            <input
+              type="text"
+              id="signup-fullname"
+              class="form-control"
+              placeholder="e.g. Shaneil Clarke"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="signup-id">ID Number</label>
+            <input
+              type="text"
+              id="signup-id"
+              class="form-control"
+              placeholder="9-digit Student ID or Staff ID"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="signup-password">Password</label>
+            <input
+              type="password"
+              id="signup-password"
+              class="form-control"
+              placeholder="At least 4 characters"
+              required
+              minlength="4"
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="signup-confirm-password"
+              >Confirm Password</label
+            >
+            <input
+              type="password"
+              id="signup-confirm-password"
+              class="form-control"
+              placeholder="Re-enter password"
+              required
+              minlength="4"
+            />
+          </div>
+
+          <button
+            type="submit"
+            class="btn btn-primary btn-block"
+            style="margin-top: 1rem"
+          >
+            Register Account &rarr;
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- MODAL: FORGOT PASSWORD -->
+    <div id="modal-forgot" class="modal-overlay" style="display: none">
+      <div class="modal-card">
+        <button class="modal-close" id="btn-close-forgot">&times;</button>
+        <h3
+          style="
+            font-size: 1.4rem;
+            font-weight: 900;
+            color: var(--gray-900);
+            margin-bottom: 0.35rem;
+          "
+        >
+          Reset Password
+        </h3>
+        <p
+          style="
+            font-size: 0.85rem;
+            color: var(--gray-500);
+            margin-bottom: 1.25rem;
+          "
+        >
+          Enter your registered ID or email to set a new password.
+        </p>
+
+        <div
+          id="forgot-alert-banner"
+          class="alert alert-danger"
+          style="display: none"
+        >
+          <span id="forgot-alert-icon">⚠️</span>
+          <span id="forgot-alert-text"></span>
+        </div>
+
+        <form id="form-forgot">
+          <div class="form-group">
+            <label class="form-label" for="forgot-id">ID Number or Email</label>
+            <input
+              type="text"
+              id="forgot-id"
+              class="form-control"
+              placeholder="e.g. 620123456 or STAFF101"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="forgot-new-password"
+              >New Password</label
+            >
+            <input
+              type="password"
+              id="forgot-new-password"
+              class="form-control"
+              placeholder="Enter new password"
+              required
+              minlength="4"
+            />
+          </div>
+
+          <button
+            type="submit"
+            class="btn btn-primary btn-block"
+            style="margin-top: 1rem"
+          >
+            Update Password &rarr;
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <script src="/src/auth.js"></script>
+    <script src="/src/store.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const formLogin = document.getElementById("form-login");
+        const inputLoginId = document.getElementById("login-id");
+        const inputLoginPass = document.getElementById("login-password");
+        const errorBanner = document.getElementById("login-error-banner");
+        const errorText = document.getElementById("login-error-text");
+        const successBanner = document.getElementById("login-success-banner");
+        const successText = document.getElementById("login-success-text");
+
+        // Demo quick fills
+        document
+          .getElementById("btn-quick-staff")
+          .addEventListener("click", () => {
+            inputLoginId.value = "STAFF101";
+            inputLoginPass.value = "staff123";
+            clearErrors();
+            inputLoginId.focus();
+          });
+
+        document
+          .getElementById("btn-quick-student")
+          .addEventListener("click", () => {
+            inputLoginId.value = "620123456";
+            inputLoginPass.value = "student123";
+            clearErrors();
+            inputLoginId.focus();
+          });
+
+        document
+          .getElementById("btn-quick-student-2")
+          .addEventListener("click", () => {
+            inputLoginId.value = "620198765";
+            inputLoginPass.value = "student123";
+            clearErrors();
+            inputLoginId.focus();
+          });
+
+        function clearErrors() {
+          errorBanner.style.display = "none";
+          successBanner.style.display = "none";
+          inputLoginId.classList.remove("is-invalid");
+          inputLoginPass.classList.remove("is-invalid");
         }
+
+        formLogin.addEventListener("submit", (e) => {
+          e.preventDefault();
+          clearErrors();
+
+          const id = inputLoginId.value.trim();
+          const pass = inputLoginPass.value.trim();
+
+          const result = window.QFitAuth.login(id, pass);
+
+          if (result.success) {
+            successText.textContent = `Successfully signed in as ${result.user.fullName}`;
+            successBanner.style.display = "flex";
+            setTimeout(() => {
+              window.location.href = result.redirectUrl;
+            }, 600);
+          } else {
+            errorText.textContent = result.error;
+            errorBanner.style.display = "flex";
+            inputLoginId.classList.add("is-invalid");
+            inputLoginPass.classList.add("is-invalid");
+          }
+        });
+
+        // Modals
+        const modalSignup = document.getElementById("modal-signup");
+        const modalForgot = document.getElementById("modal-forgot");
+        const linkSignup = document.getElementById("link-signup");
+        const linkForgot = document.getElementById("link-forgot-password");
+        const btnCloseSignup = document.getElementById("btn-close-signup");
+        const btnCloseForgot = document.getElementById("btn-close-forgot");
+
+        const formSignup = document.getElementById("form-signup");
+        const signupErrorBanner = document.getElementById(
+          "signup-error-banner",
+        );
+        const signupErrorText = document.getElementById("signup-error-text");
+        const signupSuccessBanner = document.getElementById(
+          "signup-success-banner",
+        );
+        const signupSuccessText = document.getElementById(
+          "signup-success-text",
+        );
+
+        linkSignup.addEventListener("click", (e) => {
+          e.preventDefault();
+          if (formSignup) formSignup.reset();
+          if (signupErrorBanner) signupErrorBanner.style.display = "none";
+          if (signupSuccessBanner) signupSuccessBanner.style.display = "none";
+          modalSignup.style.display = "flex";
+        });
+
+        linkForgot.addEventListener("click", (e) => {
+          e.preventDefault();
+          modalForgot.style.display = "flex";
+        });
+
+        btnCloseSignup.addEventListener(
+          "click",
+          () => (modalSignup.style.display = "none"),
+        );
+        btnCloseForgot.addEventListener(
+          "click",
+          () => (modalForgot.style.display = "none"),
+        );
+
+        // Signup form
+        formSignup.addEventListener("submit", (e) => {
+          e.preventDefault();
+          signupErrorBanner.style.display = "none";
+          signupSuccessBanner.style.display = "none";
+
+          const pass = document.getElementById("signup-password").value;
+          const confirmPass = document.getElementById(
+            "signup-confirm-password",
+          ).value;
+
+          if (pass !== confirmPass) {
+            signupErrorText.textContent = "Passwords do not match.";
+            signupErrorBanner.style.display = "flex";
+            return;
+          }
+
+          const data = {
+            role: document.getElementById("signup-role").value,
+            fullName: document.getElementById("signup-fullname").value,
+            userIdentifier: document.getElementById("signup-id").value,
+            password: pass,
+          };
+
+          const res = window.QFitAuth.register(data);
+          if (res.success) {
+            signupSuccessText.textContent = `Account registered! Successfully signed in as ${res.user.fullName}`;
+            signupSuccessBanner.style.display = "flex";
+            setTimeout(() => {
+              window.location.href = res.redirectUrl;
+            }, 600);
+          } else {
+            signupErrorText.textContent = res.error;
+            signupErrorBanner.style.display = "flex";
+          }
+        });
+
+        // Forgot password form
+        document
+          .getElementById("form-forgot")
+          .addEventListener("submit", (e) => {
+            e.preventDefault();
+            const banner = document.getElementById("forgot-alert-banner");
+            const text = document.getElementById("forgot-alert-text");
+            const icon = document.getElementById("forgot-alert-icon");
+            banner.style.display = "none";
+
+            const id = document.getElementById("forgot-id").value;
+            const newPass = document.getElementById(
+              "forgot-new-password",
+            ).value;
+
+            const res = window.QFitAuth.resetPassword(id, newPass);
+            if (res.success) {
+              banner.className = "alert alert-success";
+              icon.textContent = "✅";
+              text.textContent = res.message;
+              banner.style.display = "flex";
+              setTimeout(() => {
+                modalForgot.style.display = "none";
+              }, 1800);
+            } else {
+              banner.className = "alert alert-danger";
+              icon.textContent = "⚠️";
+              text.textContent = res.error;
+              banner.style.display = "flex";
+            }
+          });
       });
-
-      // Modals
-      const modalSignup = document.getElementById('modal-signup');
-      const modalForgot = document.getElementById('modal-forgot');
-      const linkSignup = document.getElementById('link-signup');
-      const linkForgot = document.getElementById('link-forgot-password');
-      const btnCloseSignup = document.getElementById('btn-close-signup');
-      const btnCloseForgot = document.getElementById('btn-close-forgot');
-
-      const formSignup = document.getElementById('form-signup');
-      const signupErrorBanner = document.getElementById('signup-error-banner');
-      const signupErrorText = document.getElementById('signup-error-text');
-      const signupSuccessBanner = document.getElementById('signup-success-banner');
-      const signupSuccessText = document.getElementById('signup-success-text');
-
-      linkSignup.addEventListener('click', (e) => {
-        e.preventDefault();
-        if (formSignup) formSignup.reset();
-        if (signupErrorBanner) signupErrorBanner.style.display = 'none';
-        if (signupSuccessBanner) signupSuccessBanner.style.display = 'none';
-        modalSignup.style.display = 'flex';
-      });
-
-      linkForgot.addEventListener('click', (e) => {
-        e.preventDefault();
-        modalForgot.style.display = 'flex';
-      });
-
-      btnCloseSignup.addEventListener('click', () => modalSignup.style.display = 'none');
-      btnCloseForgot.addEventListener('click', () => modalForgot.style.display = 'none');
-
-      // Signup form
-      formSignup.addEventListener('submit', (e) => {
-        e.preventDefault();
-        signupErrorBanner.style.display = 'none';
-        signupSuccessBanner.style.display = 'none';
-
-        const pass = document.getElementById('signup-password').value;
-        const confirmPass = document.getElementById('signup-confirm-password').value;
-
-        if (pass !== confirmPass) {
-          signupErrorText.textContent = 'Passwords do not match.';
-          signupErrorBanner.style.display = 'flex';
-          return;
-        }
-
-        const data = {
-          role: document.getElementById('signup-role').value,
-          fullName: document.getElementById('signup-fullname').value,
-          userIdentifier: document.getElementById('signup-id').value,
-          password: pass
-        };
-
-        const res = window.QFitAuth.register(data);
-        if (res.success) {
-          signupSuccessText.textContent = `Account registered! Successfully signed in as ${res.user.fullName}`;
-          signupSuccessBanner.style.display = 'flex';
-          setTimeout(() => {
-            window.location.href = res.redirectUrl;
-          }, 600);
-        } else {
-          signupErrorText.textContent = res.error;
-          signupErrorBanner.style.display = 'flex';
-        }
-      });
-
-      // Forgot password form
-      document.getElementById('form-forgot').addEventListener('submit', (e) => {
-        e.preventDefault();
-        const banner = document.getElementById('forgot-alert-banner');
-        const text = document.getElementById('forgot-alert-text');
-        const icon = document.getElementById('forgot-alert-icon');
-        banner.style.display = 'none';
-
-        const id = document.getElementById('forgot-id').value;
-        const newPass = document.getElementById('forgot-new-password').value;
-
-        const res = window.QFitAuth.resetPassword(id, newPass);
-        if (res.success) {
-          banner.className = 'alert alert-success';
-          icon.textContent = '✅';
-          text.textContent = res.message;
-          banner.style.display = 'flex';
-          setTimeout(() => {
-            modalForgot.style.display = 'none';
-          }, 1800);
-        } else {
-          banner.className = 'alert alert-danger';
-          icon.textContent = '⚠️';
-          text.textContent = res.error;
-          banner.style.display = 'flex';
-        }
-      });
-    });
-  </script>
-</body>
+    </script>
+  </body>
 </html>

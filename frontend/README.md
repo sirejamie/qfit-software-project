@@ -10,4 +10,8 @@ Frontend Folder
 
 ## Demonstration
 
-All thats necessary for the presentation would just be opening `index.html` in a browser.
+All thats necessary for the presentation would be running this command:
+
+```sh
+npm run dev
+```
