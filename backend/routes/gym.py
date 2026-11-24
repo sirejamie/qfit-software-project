@@ -9,4 +9,18 @@ gym_manager = GymManager(Gym(occupancy = 20))
 @router.get("/gym/status")
 def get_gym_status():
     return gym_manager.get_capacity_status()
-    
+
+@router.get("/gym/active")
+def get_gym_active():
+    """
+    Returns a list of all users currently in the gym with their session being active
+    """
+    return []
+
+
+@router.get("/gym/waitlist")
+def get_gym_waitlist():
+    """
+    Returns a list of all users currently in the waitlist for the queue
+    """
+    return []
