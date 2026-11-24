@@ -2,6 +2,7 @@ from models.gym import Gym
 
 class GymManager:
     MESSAGE = "The gym is at full capacity. Please try again shortly."
+
     def __init__(self, gym: Gym):
         self.gym = gym
 
