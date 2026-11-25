@@ -15,8 +15,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Quick-fill buttons
   const btnStaff = document.getElementById('btn-quick-staff');
-  const btnStudent = document.getElementById('btn-quick-student');
-  const btnStudent2 = document.getElementById('btn-quick-student-2');
+  const btnUser = document.getElementById('btn-quick-user');
+  const btnUser2 = document.getElementById('btn-quick-user-2');
 
   if (btnStaff) {
     btnStaff.addEventListener('click', () => {
@@ -27,19 +27,19 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  if (btnStudent) {
-    btnStudent.addEventListener('click', () => {
+  if (btnUser) {
+    btnUser.addEventListener('click', () => {
       inputLoginId.value = '620123456';
-      inputLoginPass.value = 'student123';
+      inputLoginPass.value = 'user123';
       clearErrors();
       inputLoginId.focus();
     });
   }
 
-  if (btnStudent2) {
-    btnStudent2.addEventListener('click', () => {
+  if (btnUser2) {
+    btnUser2.addEventListener('click', () => {
       inputLoginId.value = '620198765';
-      inputLoginPass.value = 'student123';
+      inputLoginPass.value = 'user123';
       clearErrors();
       inputLoginId.focus();
     });
@@ -53,14 +53,19 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   if (formLogin) {
-    formLogin.addEventListener('submit', (e) => {
+    formLogin.addEventListener('submit', async (e) => {
       e.preventDefault();
       clearErrors();
 
       const id = inputLoginId.value.trim();
       const pass = inputLoginPass.value.trim();
 
-      const result = window.QFitAuth.login(id, pass);
+      let result;
+      try {
+        result = await window.QFitAuth.login(id, pass);
+      } catch (error) {
+        result = { success: false, error: error.message || 'Unable to sign in.' };
+      }
 
       if (result.success) {
         successText.textContent = `Successfully signed in as ${result.user.fullName}`;

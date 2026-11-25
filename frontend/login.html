@@ -109,7 +109,7 @@
         <div class="split-auth-form-wrap">
           <h2 class="split-auth-title">Login</h2>
           <p class="split-auth-subtitle">
-            Welcome! Sign in to access the staff or student portal.
+            Welcome! Sign in to access the staff or user portal.
           </p>
 
           <!-- Error Message Banner (Clarity Reference Design) -->
@@ -141,7 +141,7 @@
                 type="text"
                 id="login-id"
                 class="form-control"
-                placeholder="Student ID or Staff ID"
+                placeholder="User ID or Staff ID"
                 required
                 autocomplete="username"
               />
@@ -276,18 +276,18 @@
               <button
                 type="button"
                 class="btn btn-secondary btn-sm"
-                id="btn-quick-student"
+                id="btn-quick-user"
                 style="flex: 1; font-size: 0.75rem"
               >
-                Student 1: <strong>620123456</strong>
+                User 1: <strong>620123456</strong>
               </button>
               <button
                 type="button"
                 class="btn btn-secondary btn-sm"
-                id="btn-quick-student-2"
+                id="btn-quick-user-2"
                 style="flex: 1; font-size: 0.75rem"
               >
-                Student 2: <strong>620198765</strong>
+                User 2: <strong>620198765</strong>
               </button>
             </div>
           </div>
@@ -316,7 +316,7 @@
             margin-bottom: 1.25rem;
           "
         >
-          Register as a student or staff member for gym access.
+          Register as a user or staff member for gym access.
         </p>
 
         <div
@@ -341,7 +341,7 @@
           <div class="form-group">
             <label class="form-label" for="signup-role">Role</label>
             <select id="signup-role" class="form-control" required>
-              <option value="student" selected>Student</option>
+              <option value="user" selected>User</option>
               <option value="staff">Gym Staff</option>
             </select>
           </div>
@@ -363,7 +363,7 @@
               type="text"
               id="signup-id"
               class="form-control"
-              placeholder="9-digit Student ID or Staff ID"
+              placeholder="9-digit User ID or Staff ID"
               required
             />
           </div>
@@ -475,8 +475,8 @@
       </div>
     </div>
 
+    <script src="/src/api.js"></script>
     <script src="/src/auth.js"></script>
-    <script src="/src/store.js"></script>
     <script>
       document.addEventListener("DOMContentLoaded", () => {
         const formLogin = document.getElementById("form-login");
@@ -498,19 +498,19 @@
           });
 
         document
-          .getElementById("btn-quick-student")
+          .getElementById("btn-quick-user")
           .addEventListener("click", () => {
             inputLoginId.value = "620123456";
-            inputLoginPass.value = "student123";
+            inputLoginPass.value = "user123";
             clearErrors();
             inputLoginId.focus();
           });
 
         document
-          .getElementById("btn-quick-student-2")
+          .getElementById("btn-quick-user-2")
           .addEventListener("click", () => {
             inputLoginId.value = "620198765";
-            inputLoginPass.value = "student123";
+            inputLoginPass.value = "user123";
             clearErrors();
             inputLoginId.focus();
           });
@@ -522,14 +522,18 @@
           inputLoginPass.classList.remove("is-invalid");
         }
 
-        formLogin.addEventListener("submit", (e) => {
+        formLogin.addEventListener("submit", async (e) => {
           e.preventDefault();
           clearErrors();
 
           const id = inputLoginId.value.trim();
           const pass = inputLoginPass.value.trim();
-
-          const result = window.QFitAuth.login(id, pass);
+          let result;
+          try {
+            result = await window.QFitAuth.login(id, pass);
+          } catch (error) {
+            result = { success: false, error: error.message || "Unable to sign in." };
+          }
 
           if (result.success) {
             successText.textContent = `Successfully signed in as ${result.user.fullName}`;
@@ -588,7 +592,7 @@
         );
 
         // Signup form
-        formSignup.addEventListener("submit", (e) => {
+        formSignup.addEventListener("submit", async (e) => {
           e.preventDefault();
           signupErrorBanner.style.display = "none";
           signupSuccessBanner.style.display = "none";
@@ -611,7 +615,12 @@
             password: pass,
           };
 
-          const res = window.QFitAuth.register(data);
+          let res;
+          try {
+            res = await window.QFitAuth.register(data);
+          } catch (error) {
+            res = { success: false, error: error.message || "Unable to register." };
+          }
           if (res.success) {
             signupSuccessText.textContent = `Account registered! Successfully signed in as ${res.user.fullName}`;
             signupSuccessBanner.style.display = "flex";
@@ -627,7 +636,7 @@
         // Forgot password form
         document
           .getElementById("form-forgot")
-          .addEventListener("submit", (e) => {
+          .addEventListener("submit", async (e) => {
             e.preventDefault();
             const banner = document.getElementById("forgot-alert-banner");
             const text = document.getElementById("forgot-alert-text");
@@ -639,7 +648,12 @@
               "forgot-new-password",
             ).value;
 
-            const res = window.QFitAuth.resetPassword(id, newPass);
+            let res;
+            try {
+              res = await window.QFitAuth.resetPassword(id, newPass);
+            } catch (error) {
+              res = { success: false, error: error.message || "Unable to reset password." };
+            }
             if (res.success) {
               banner.className = "alert alert-success";
               icon.textContent = "✅";

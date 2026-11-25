@@ -13,16 +13,16 @@ document.addEventListener('DOMContentLoaded', () => {
   const kioskFullAlert = document.getElementById('kiosk-full-alert');
 
   // Generate target check-in URL
-  const studentCheckinUrl = window.location.origin + window.location.pathname.replace('kiosk.html', 'student.html');
+  const userCheckinUrl = window.location.origin + window.location.pathname.replace('kiosk.html', 'user.html');
 
   // Render SVG QR Code
-  qrSvgWrapper.innerHTML = window.QFitQR.generateSVG(studentCheckinUrl, 220);
+  qrSvgWrapper.innerHTML = window.QFitQR.generateSVG(userCheckinUrl, 220);
 
   function updateKioskView() {
     const capacity = window.QFitStore.getCapacityStatus();
     const { currentCount, maxCapacity, isFull, isQrActive, manualDeactivated } = capacity;
 
-    kioskCapacityText.textContent = `${currentCount} / ${maxCapacity} Students`;
+    kioskCapacityText.textContent = `${currentCount} / ${maxCapacity} Users`;
     const pct = Math.min(100, Math.round((currentCount / maxCapacity) * 100));
     kioskCapacityBar.style.width = `${pct}%`;
 
@@ -64,5 +64,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Initial load
-  updateKioskView();
+  window.QFitStore.ready.then(updateKioskView)
+    .catch(error => console.error('Unable to load gym capacity:', error));
 });

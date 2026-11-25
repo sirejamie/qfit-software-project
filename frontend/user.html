@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>QFIT - Student Portal</title>
+    <title>QFIT - User Portal</title>
     <link rel="stylesheet" href="/css/styles.css" />
     <style>
       .scanner-viewport {
@@ -54,16 +54,16 @@
   <body>
     <!-- Top Navigation -->
     <nav class="navbar">
-      <a href="student.html" class="brand">
+      <a href="user.html" class="brand">
         <div class="brand-logo">QFIT</div>
         <div class="brand-text">
-          <h1>Student Portal</h1>
+          <h1>User Portal</h1>
           <span id="user-role-text">Member</span>
         </div>
       </a>
       <div class="nav-links">
         <span
-          id="student-header-name"
+          id="user-header-name"
           style="
             font-size: 0.85rem;
             font-weight: 700;
@@ -76,7 +76,7 @@
         >
           👤 Alaena Sang
         </span>
-        <button id="btn-student-logout" class="nav-btn" style="cursor: pointer">
+        <button id="btn-user-logout" class="nav-btn" style="cursor: pointer">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="16"
@@ -168,7 +168,7 @@
               style="display: none; margin-top: 0.5rem"
             >
               <a
-                href="student.html"
+                href="user.html"
                 target="_blank"
                 rel="noopener"
                 class="btn btn-sm btn-secondary"
@@ -259,7 +259,7 @@
             Your session timer is currently out of sync with the gym staff
             dashboard.
             <div style="margin-top: 0.5rem">
-              <button id="btn-student-resync" class="btn btn-sm btn-secondary">
+              <button id="btn-user-resync" class="btn btn-sm btn-secondary">
                 🔄 Resync with Staff Dashboard
               </button>
             </div>
@@ -278,7 +278,7 @@
 
         <div style="margin-bottom: 0.5rem">
           <h3
-            id="timer-student-name"
+            id="timer-user-name"
             style="
               font-size: 1.45rem;
               font-weight: 900;
@@ -288,7 +288,7 @@
             Alaena Sang
           </h3>
           <p
-            id="timer-student-details"
+            id="timer-user-details"
             style="
               font-size: 0.85rem;
               color: var(--gray-500);
@@ -300,11 +300,11 @@
         </div>
 
         <!-- Circular Timer Display -->
-        <div id="student-timer-circle" class="student-timer-circle">
-          <span id="student-countdown-text" class="student-timer-time"
+        <div id="user-timer-circle" class="user-timer-circle">
+          <span id="user-countdown-text" class="user-timer-time"
             >59:59</span
           >
-          <span id="student-timer-status-text" class="student-timer-label"
+          <span id="user-timer-status-text" class="user-timer-label"
             >Time Remaining</span
           >
         </div>
@@ -357,7 +357,7 @@
             margin-bottom: 1.25rem;
           "
         >
-          The gym has reached its capacity limit of 20 students. You have been
+          The gym has reached its capacity limit of 20 users. You have been
           placed in the admission queue.
         </p>
 
@@ -503,8 +503,9 @@
       </button>
     </div>
 
+    <script src="/src/api.js"></script>
     <script src="/src/auth.js"></script>
     <script src="/src/store.js"></script>
-    <script src="/src/student.js"></script>
+    <script src="/src/user.js"></script>
   </body>
 </html>

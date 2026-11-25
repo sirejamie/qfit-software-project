@@ -853,8 +853,8 @@ body {
   animation: pulseSubtle 1.8s infinite ease-in-out;
 }
 
-/* Student Circular Timer with Smooth Pulse */
-.student-timer-circle {
+/* User Circular Timer with Smooth Pulse */
+.user-timer-circle {
   width: 230px;
   height: 230px;
   border-radius: 50%;
@@ -870,18 +870,18 @@ body {
   transition: border-color 0.4s ease, box-shadow 0.4s ease, transform 0.3s ease;
 }
 
-.student-timer-circle.warning {
+.user-timer-circle.warning {
   border-color: var(--warning);
   box-shadow: 0 15px 35px -5px rgba(217, 119, 6, 0.3);
 }
 
-.student-timer-circle.expired {
+.user-timer-circle.expired {
   border-color: var(--primary-700);
   animation: pulseSubtle 1.5s infinite ease-in-out;
   box-shadow: 0 15px 40px -5px rgba(185, 28, 28, 0.5);
 }
 
-.student-timer-time {
+.user-timer-time {
   font-size: 3rem;
   font-weight: 900;
   font-family: monospace;
@@ -889,7 +889,7 @@ body {
   transition: color 0.3s ease;
 }
 
-.student-timer-label {
+.user-timer-label {
   font-size: 0.8rem;
   font-weight: 800;
   color: var(--primary-600);

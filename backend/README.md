@@ -7,7 +7,14 @@ Backend Folder
 * uv
 * fastapi
 * supabase
-* qrcode
+
+```sh
+uv run python -m scripts.seed_demo_users
+```
+
+The command creates only missing Auth accounts; existing accounts keep their
+current passwords, while their profile rows are synchronized. The demo
+passwords are development credentials and should not be used in production.
 
 ## Commands
 
