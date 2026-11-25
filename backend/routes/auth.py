@@ -7,7 +7,6 @@ from constants.demo_users import DEMO_USERS
 
 router = APIRouter()
 
-
 class LoginRequest(BaseModel):
     userIdentifier: str = Field(min_length=1)
     password: str = Field(min_length=1)

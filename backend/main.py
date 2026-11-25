@@ -1,8 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routes.gym import router as gym_router
-from routes.demo import router as demo_router
+
 from routes.auth import router as auth_router
+from routes.demo import router as demo_router
+from routes.gym import router as gym_router
 
 app = FastAPI()
 
