@@ -7,8 +7,23 @@ class Gym:
         self.operating_hours = operating_hours
         self.session_store = session_store or InMemorySessionStore()
 
+    def get_operating_hours(self) -> str:
+        return self.operating_hours
+
+    def get_capacity(self) -> int:
+        return self.capacity
+
+    def get_operating_hours(self) -> str:
+        return self.operating_hours
+
+    def get_capacity(self) -> int:
+        return self.capacity
+
     def get_occupancy(self) -> int:
         return self.session_store.count()
 
-    def display_operating_hours(self) -> str:
-        return self.operating_hours
+    def get_active_queue(self) -> list[dict[str, int]]:
+        return [{"james": 2}]
+
+    def get_waitlist_queue(self) -> list[dict[str, int]]:
+        return [{"baker": 2}]

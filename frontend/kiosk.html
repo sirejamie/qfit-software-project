@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>QFIT - Entrance Kiosk | Gym Queue System</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+  </head>
+  <body style="background: #18181b; color: #f4f4f5">
+    <!-- Kiosk Header -->
+    <nav
+      class="navbar"
+      style="background: #ffffff; border-bottom: 4px solid var(--primary-500)"
+    >
+      <a href="index.html" class="brand">
+        <div class="brand-logo">QFIT</div>
+        <div class="brand-text">
+          <h1 style="color: #18181b">QFIT System</h1>
+          <span style="color: var(--primary-600)">Entrance Check-In Kiosk</span>
+        </div>
+      </a>
+      <div class="nav-links">
+        <a href="kiosk.html" class="nav-btn active">🏷️ Entrance Kiosk</a>
+        <a href="index.html" class="nav-btn">🔐 Portal Login</a>
+      </div>
+    </nav>
+
+    <main
+      class="container"
+      style="
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 80vh;
+      "
+    >
+      <!-- Kiosk Display Card -->
+      <div
+        class="card qr-card motion-scale-in"
+        style="
+          max-width: 580px;
+          width: 100%;
+          border: 2px solid var(--gray-200);
+          background: #ffffff;
+          color: #18181b;
+          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+        "
+      >
+        <div style="margin-bottom: 1rem">
+          <span
+            style="
+              font-size: 0.85rem;
+              font-weight: 800;
+              letter-spacing: 1px;
+              color: var(--primary-600);
+              text-transform: uppercase;
+            "
+            >Fitness Center Entrance</span
+          >
+          <h2
+            style="
+              font-size: 2.1rem;
+              font-weight: 900;
+              color: #18181b;
+              margin-top: 0.25rem;
+              letter-spacing: -0.5px;
+            "
+          >
+            SCAN TO ENTER
+          </h2>
+          <p
+            style="
+              color: var(--gray-600);
+              font-size: 0.95rem;
+              margin-top: 0.25rem;
+            "
+          >
+            Scan this QR code with your phone camera to join the queue and start
+            your workout.
+          </p>
+        </div>
+
+        <!-- Live QR Code Frame (F-01, F-03) -->
+        <div id="qr-container" class="qr-box">
+          <div id="qr-svg-wrapper">
+            <!-- Dynamically generated SVG QR Code -->
+          </div>
+
+          <!-- Deactivated Lock Overlay (F-03 SR-2) -->
+          <div
+            id="qr-overlay-locked"
+            class="qr-overlay-lock"
+            style="display: none"
+          >
+            🔒 ENTRY DEACTIVATED
+          </div>
+        </div>
+
+        <!-- Capacity & Status Banner -->
+        <div
+          id="kiosk-status-badge"
+          class="badge badge-success"
+          style="
+            font-size: 0.95rem;
+            padding: 0.5rem 1.25rem;
+            margin-bottom: 1.25rem;
+          "
+        >
+          ✅ QR Code Active & Ready
+        </div>
+
+        <div
+          style="
+            width: 100%;
+            background: #fafafa;
+            padding: 1.15rem;
+            border-radius: var(--radius-md);
+            border: 1.5px solid var(--gray-200);
+            margin-bottom: 1.25rem;
+          "
+        >
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-bottom: 0.5rem;
+            "
+          >
+            <span
+              style="
+                font-size: 0.8rem;
+                font-weight: 800;
+                color: var(--gray-600);
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+              "
+              >Current Occupancy (F-03)</span
+            >
+            <span
+              id="kiosk-capacity-text"
+              style="
+                font-size: 1.25rem;
+                font-weight: 900;
+                color: var(--primary-600);
+              "
+              >19 / 20 Students</span
+            >
+          </div>
+          <div class="capacity-bar-track" style="background: var(--gray-200)">
+            <div
+              id="kiosk-capacity-bar"
+              class="capacity-bar-fill"
+              style="width: 95%"
+            ></div>
+          </div>
+        </div>
+
+        <!-- Full Capacity Message (F-03 SR-3, AC-3) -->
+        <div
+          id="kiosk-full-alert"
+          class="alert alert-danger"
+          style="display: none; width: 100%; text-align: left"
+        >
+          <span class="alert-icon">🚫</span>
+          <div>
+            <strong>Facility at Maximum Capacity:</strong><br />
+            Entry is temporarily restricted to prevent overcrowding. Please wait
+            in the lobby until an attendee checks out.
+          </div>
+        </div>
+
+        <!-- Direct Link / Simulation Button -->
+        <div style="margin-top: 1rem; width: 100%">
+          <a
+            id="btn-simulate-mobile-scan"
+            href="student.html"
+            target="_blank"
+            class="btn btn-primary btn-block"
+          >
+            📲 Open Student Scanner On Mobile / New Tab
+          </a>
+        </div>
+      </div>
+    </main>
+
+    <footer style="background: #18181b; border-color: #27272a; color: #a1a1aa">
+      <p>&copy; 2026 - 2027 QFIT - All Rights Reserved.</p>
+    </footer>
+
+    <script src="/src/store.js"></script>
+    <script src="/src/qrcode.js"></script>
+    <script src="/src/kiosk.js"></script>
+  </body>
+</html>
