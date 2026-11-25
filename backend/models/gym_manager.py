@@ -18,6 +18,14 @@ class GymManager:
             result["message"] = self.FULL_MESSAGE
         return result
 
+    def add_to_active_queue(self, user_data: dict) -> dict:
+        user = self.gym.add_to_active_queue(user_data)
+        self.update_gym_list()
+        return user
+
+    def add_to_waitlist_queue(self, user_data: dict) -> dict:
+        return self.gym.add_to_waitlist_queue(user_data)
+
     def update_gym_list(self) -> list[dict]:
         self.gym_list = self.gym.get_active_queue()
         return self.gym_list

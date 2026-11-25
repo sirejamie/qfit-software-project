@@ -61,6 +61,24 @@ def gym_checkin(request: CheckInRequest):
     return gym_manager.process_check_in(request.model_dump())
 
 
+@router.post("/gym/active", status_code=201)
+def add_active_user(request: CheckInRequest):
+    try:
+        user = gym_manager.add_to_active_queue(request.model_dump())
+    except ValueError as error:
+        raise HTTPException(status_code=409, detail=str(error)) from error
+    return {"user": user}
+
+
+@router.post("/gym/waitlist", status_code=201)
+def add_waitlisted_user(request: CheckInRequest):
+    try:
+        user = gym_manager.add_to_waitlist_queue(request.model_dump())
+    except ValueError as error:
+        raise HTTPException(status_code=409, detail=str(error)) from error
+    return {"user": user}
+
+
 @router.post("/gym/checkout/{userId}", status_code=204)
 def gym_checkout(userId: str, request: CheckoutRequest) -> Response:
     if request.removedBy == "staff":
