@@ -37,3 +37,28 @@ Run demo
 ```sh
 uv run fastapi dev
 ```
+
+## Docker
+
+Build and start the API:
+
+```sh
+docker compose up --build
+```
+
+The API is available at `http://localhost:8000`, with a health check at
+`http://localhost:8000/health`.
+
+By default, Docker uses the in-memory store. To use Supabase, set the variables
+before starting Compose:
+
+```sh
+STORE_BACKEND=supabase
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+docker compose up --build
+```
+
+On PowerShell, set the variables with `$env:STORE_BACKEND = "supabase"` before
+running `docker compose up --build`. Keep the service-role key out of source
+control and never expose it to a browser or frontend application.
