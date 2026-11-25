@@ -65,37 +65,18 @@ class Gym:
     def _now() -> str:
         return datetime.now(UTC).isoformat()
 
-    def check_in(self, user_data: dict[str, Any]) -> dict[str, Any]:
+    @staticmethod
+    def _normalize_user_data(user_data: dict[str, Any]) -> tuple[str, str]:
         user_id = user_data["userId"].strip()
         full_name = user_data["fullName"].strip()
         if not user_id or not full_name:
             raise ValueError("A user ID and full name are required.")
+        return user_id, full_name
 
-        active = next(
-            (user for user in self.get_active_queue() if user["userId"] == user_id),
-            None,
-        )
-        if active:
-            return {
-                "success": True,
-                "alreadyActive": True,
-                "status": "active",
-                "user": active,
-            }
-
-        waiting = next(
-            (user for user in self.get_waitlist_queue() if user["userId"] == user_id),
-            None,
-        )
-        if waiting:
-            return {
-                "success": True,
-                "alreadyWaitlisted": True,
-                "status": "waitlist",
-                "user": waiting,
-            }
-
-        record = {
+    def _new_user_record(
+        self, user_id: str, full_name: str, user_data: dict[str, Any]
+    ) -> dict[str, Any]:
+        return {
             "id": f"user-{user_id}",
             "userId": user_id,
             "fullName": full_name,
@@ -104,6 +85,61 @@ class Gym:
             "notify5MinBefore": bool(user_data.get("notify5MinBefore", False)),
             "syncFailed": False,
         }
+
+    def _find_queued_user(
+        self, user_id: str
+    ) -> tuple[dict[str, Any] | None, dict[str, Any] | None]:
+        active = next(
+            (user for user in self.get_active_queue() if user["userId"] == user_id),
+            None,
+        )
+        waiting = next(
+            (user for user in self.get_waitlist_queue() if user["userId"] == user_id),
+            None,
+        )
+        return active, waiting
+
+    def add_to_active_queue(self, user_data: dict[str, Any]) -> dict[str, Any]:
+        user_id, full_name = self._normalize_user_data(user_data)
+        active, waiting = self._find_queued_user(user_id)
+        if active or waiting:
+            raise ValueError(f"User {user_id!r} is already in a queue.")
+        if self.get_occupancy() >= self.capacity:
+            raise ValueError("The active queue is at full capacity.")
+
+        record = self._new_user_record(user_id, full_name, user_data)
+        record["joinedAt"] = self._now()
+        return self.session_store.add(user_id, record)
+
+    def add_to_waitlist_queue(self, user_data: dict[str, Any]) -> dict[str, Any]:
+        user_id, full_name = self._normalize_user_data(user_data)
+        active, waiting = self._find_queued_user(user_id)
+        if active or waiting:
+            raise ValueError(f"User {user_id!r} is already in a queue.")
+
+        record = self._new_user_record(user_id, full_name, user_data)
+        record["addedAt"] = self._now()
+        return self.queue.add_to_queue(user_id, record)
+
+    def check_in(self, user_data: dict[str, Any]) -> dict[str, Any]:
+        user_id, full_name = self._normalize_user_data(user_data)
+        active, waiting = self._find_queued_user(user_id)
+        if active:
+            return {
+                "success": True,
+                "alreadyActive": True,
+                "status": "active",
+                "user": active,
+            }
+        if waiting:
+            return {
+                "success": True,
+                "alreadyWaitlisted": True,
+                "status": "waitlist",
+                "user": waiting,
+            }
+
+        record = self._new_user_record(user_id, full_name, user_data)
 
         if self.get_occupancy() >= self.capacity:
             record["addedAt"] = self._now()

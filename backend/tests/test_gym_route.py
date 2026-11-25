@@ -102,6 +102,42 @@ def test_full_capacity_checkin_is_persisted_to_waitlist():
     assert len(client.get("/gym/waitlist").json()) == 1
 
 
+def test_staff_can_add_users_to_specific_queues():
+    gym_manager.gym.capacity = 1
+    active = client.post(
+        "/gym/active",
+        json={"userId": "active-user", "fullName": "Active User"},
+    )
+    waiting = client.post(
+        "/gym/waitlist",
+        json={"userId": "waiting-user", "fullName": "Waiting User"},
+    )
+
+    assert active.status_code == 201
+    assert active.json()["user"]["userId"] == "active-user"
+    assert waiting.status_code == 201
+    assert waiting.json()["user"]["userId"] == "waiting-user"
+    assert [user["userId"] for user in client.get("/gym/active").json()] == [
+        "active-user"
+    ]
+    assert [user["userId"] for user in client.get("/gym/waitlist").json()] == [
+        "waiting-user"
+    ]
+
+
+def test_manual_active_add_rejects_full_capacity_without_waitlisting():
+    gym_manager.gym.capacity = 1
+    fill(1)
+
+    response = client.post(
+        "/gym/active",
+        json={"userId": "extra-user", "fullName": "Extra User"},
+    )
+
+    assert response.status_code == 409
+    assert client.get("/gym/waitlist").json() == []
+
+
 def test_checkout_and_waitlist_promotion_update_mock_database():
     fill(20)
     checkin = client.post(
