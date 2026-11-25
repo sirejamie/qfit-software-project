@@ -1,7 +1,9 @@
 from datetime import UTC, datetime
 from typing import Any
 
-from models.session_store import InMemorySessionStore
+from stores.session_store import InMemorySessionStore
+from stores.store_factory import create_session_store
+from stores.supabase_store import SupabaseStore
 
 
 class Gym:
@@ -9,11 +11,13 @@ class Gym:
         self,
         capacity: int = 20,
         operating_hours: str = "",
-        session_store: InMemorySessionStore | None = None,
+        session_store: InMemorySessionStore | SupabaseStore | None = None,
     ):
         self.capacity = capacity
         self.operating_hours = operating_hours
-        self.session_store = session_store or InMemorySessionStore()
+        self.session_store = (
+            session_store if session_store is not None else create_session_store()
+        )
         self.default_duration_min = 60
         self.manual_qr_deactivated = False
 
@@ -87,7 +91,7 @@ class Gym:
     def promote_from_waitlist(self, user_id: str) -> dict[str, Any] | None:
         if self.get_occupancy() >= self.capacity:
             return None
-        waiting = self.session_store.remove_from_waitlist(user_id)
+        waiting = self.session_store.remove_from_waitlist(user_id, status="admitted")
         if not waiting:
             return None
 
@@ -129,7 +133,7 @@ class Gym:
         return self.get_settings()
 
     def reset(self) -> None:
-        self.session_store = InMemorySessionStore()
+        self.session_store = create_session_store()
         self.capacity = 20
         self.default_duration_min = 60
         self.manual_qr_deactivated = False

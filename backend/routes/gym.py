@@ -88,7 +88,12 @@ def remove_waitlisted_user(userId: str) -> Response:
 
 @router.patch("/gym/waitlist/{userId}")
 def update_waitlist_notification(userId: str, request: WaitlistNotificationRequest):
-    user = gym_manager.gym.update_waitlist_notification(userId, request.notify5MinBefore)
+    try:
+        user = gym_manager.gym.update_waitlist_notification(
+            userId, request.notify5MinBefore
+        )
+    except NotImplementedError as error:
+        raise HTTPException(status_code=501, detail=str(error)) from error
     if user is None:
         raise HTTPException(status_code=404, detail="User is not on the waitlist.")
     return {"user": user}

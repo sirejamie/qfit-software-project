@@ -48,7 +48,9 @@ class InMemorySessionStore:
         self.waitlist[user_id] = record
         return dict(record)
 
-    def remove_from_waitlist(self, user_id: str) -> dict[str, Any] | None:
+    def remove_from_waitlist(
+        self, user_id: str, status: str = "removed"
+    ) -> dict[str, Any] | None:
         return self.waitlist.pop(user_id, None)
 
     def get_waitlist(self) -> list[dict[str, Any]]:

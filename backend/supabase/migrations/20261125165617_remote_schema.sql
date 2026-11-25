@@ -79,16 +79,16 @@ ALTER TABLE "public"."notifications"
 
 CREATE TABLE "public"."users" (
   "id"             uuid                     NOT NULL,
-  "student_id"     text,
+  "user_identifier" text,
   "full_name"      text                     NOT NULL,
   "email"          text                     NOT NULL,
-  "role"           text                     NOT NULL DEFAULT 'student'::text,
+  "role"           text                     NOT NULL DEFAULT 'user'::text,
   "is_blacklisted" boolean                  NOT NULL DEFAULT false,
   "created_at"     timestamp with time zone NOT NULL DEFAULT now(),
   CONSTRAINT "users_email_key" UNIQUE (email),
   CONSTRAINT "users_pkey" PRIMARY KEY (id),
-  CONSTRAINT "users_role_check" CHECK ((role = ANY (ARRAY['student'::text, 'staff'::text]))),
-  CONSTRAINT "users_student_id_key" UNIQUE (student_id)
+  CONSTRAINT "users_role_check" CHECK ((role = ANY (ARRAY['user'::text, 'staff'::text]))),
+  CONSTRAINT "users_user_identifier_key" UNIQUE (user_identifier)
 );
 
 ALTER TABLE "public"."users"
