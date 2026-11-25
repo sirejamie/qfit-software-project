@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from models.session_store import InMemorySessionStore
@@ -34,7 +34,7 @@ class Gym:
 
     @staticmethod
     def _now() -> str:
-        return datetime.now(timezone.utc).isoformat()
+        return datetime.now(UTC).isoformat()
 
     def check_in(self, user_data: dict[str, Any]) -> dict[str, Any]:
         user_id = user_data["userId"].strip()

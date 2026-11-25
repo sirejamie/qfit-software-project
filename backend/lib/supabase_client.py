@@ -1,7 +1,8 @@
 import os
 from pathlib import Path
+
 from dotenv import load_dotenv
-from supabase import create_client, Client
+from supabase import Client, create_client
 
 # Load environment variables from backend/.env
 load_dotenv(Path(__file__).resolve().parent / ".env")
