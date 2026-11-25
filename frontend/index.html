@@ -3,10 +3,190 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>frontend</title>
+    <title>QFIT - Gym Queue & Timer Management System</title>
+    <meta
+      name="description"
+      content="Smart gym queue creation, facility occupancy control, entrance QR kiosk, and synchronized workout session timer management for UWI Mona Gym."
+    />
+    <meta
+      property="og:title"
+      content="QFIT - Gym Queue & Timer Management System"
+    />
+    <meta
+      property="og:description"
+      content="Smart gym queue creation, facility occupancy control, entrance QR kiosk, and synchronized workout session timer management for UWI Mona Gym."
+    />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        min-height: 100vh;
+        overflow: hidden;
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial, sans-serif;
+      }
+      .welcome-fullscreen {
+        width: 100vw;
+        height: 100vh;
+        min-height: 100vh;
+        background: linear-gradient(
+          145deg,
+          #18181b 0%,
+          #7f1d1d 45%,
+          #dc2626 100%
+        );
+        color: #ffffff;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        padding: 2rem;
+        position: relative;
+        overflow: hidden;
+      }
+      .welcome-content {
+        max-width: 680px;
+        width: 100%;
+        z-index: 10;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .welcome-logo {
+        font-size: 2.25rem;
+        font-weight: 900;
+        letter-spacing: -0.5px;
+        background: #ffffff;
+        color: #dc2626;
+        padding: 0.4rem 1.4rem;
+        border-radius: 10px;
+        display: inline-block;
+        text-transform: uppercase;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+        transition: transform 0.3s var(--ease-spring);
+      }
+      .welcome-logo:hover {
+        transform: scale(1.05) translateY(-2px);
+      }
+      .welcome-title {
+        font-size: 3.5rem;
+        font-weight: 900;
+        letter-spacing: -1px;
+        margin-bottom: 1.25rem;
+        text-transform: uppercase;
+        line-height: 1.1;
+        text-shadow: 0 4px 15px rgba(0, 0, 0, 0.35);
+      }
+      .welcome-description {
+        font-size: 1.25rem;
+        opacity: 0.95;
+        line-height: 1.6;
+        margin-bottom: 2.75rem;
+        max-width: 540px;
+        color: #f4f4f5;
+      }
+      .btn-welcome {
+        background: #ffffff;
+        color: #dc2626;
+        font-size: 1.2rem;
+        font-weight: 800;
+        padding: 1.1rem 2.85rem;
+        border-radius: 14px;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.6rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+        transition: all 0.3s var(--ease-spring);
+        letter-spacing: 0.3px;
+        position: relative;
+        overflow: hidden;
+      }
+      .btn-welcome::after {
+        content: "";
+        position: absolute;
+        top: -50%;
+        left: -60%;
+        width: 20%;
+        height: 200%;
+        background: rgba(255, 255, 255, 0.4);
+        transform: rotate(30deg);
+        transition: all 0.8s ease;
+      }
+      .btn-welcome:hover::after {
+        left: 140%;
+      }
+      .btn-welcome:hover {
+        background: #ffffff;
+        transform: translateY(-4px) scale(1.03);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.45);
+        color: #b91c1c;
+      }
+      .welcome-footer {
+        position: absolute;
+        bottom: 1.5rem;
+        font-size: 0.85rem;
+        color: rgba(255, 255, 255, 0.75);
+        letter-spacing: 0.5px;
+        z-index: 10;
+      }
+      @media (max-width: 640px) {
+        .welcome-title {
+          font-size: 2.5rem;
+        }
+        .welcome-description {
+          font-size: 1.05rem;
+        }
+        .btn-welcome {
+          font-size: 1.05rem;
+          padding: 0.85rem 2rem;
+        }
+      }
+    </style>
   </head>
   <body>
-    <div id="app"></div>
-    <script type="module" src="/src/main.js"></script>
+    <main class="welcome-fullscreen">
+      <!-- Ambient Smooth Motion Orbs -->
+      <div
+        class="ambient-sphere ambient-sphere-red"
+        style="top: 10%; right: 15%"
+      ></div>
+      <div
+        class="ambient-sphere ambient-sphere-dark"
+        style="bottom: 5%; left: 10%"
+      ></div>
+
+      <div class="welcome-content">
+        <div class="motion-fade-in stagger-1">
+          <span class="welcome-logo">QFIT</span>
+        </div>
+        <h1 class="welcome-title motion-fade-in stagger-2">Welcome to QFIT</h1>
+        <p class="welcome-description motion-fade-in stagger-3">
+          The smart management and occupancy control software for the UWI Mona
+          Gym.
+        </p>
+        <div class="motion-fade-in stagger-4">
+          <a href="login.html" class="btn-welcome">
+            Proceed to Login Portal &rarr;
+          </a>
+        </div>
+      </div>
+
+      <div class="welcome-footer motion-fade-in stagger-4">
+        &copy; 2026 - 2027 QFIT - All Rights Reserved.
+      </div>
+    </main>
   </body>
 </html>

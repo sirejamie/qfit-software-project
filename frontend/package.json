@@ -1,5 +1,5 @@
 {
-  "name": "qfit-software-project-frontend",
+  "name": "frontend",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -10,8 +10,5 @@
   },
   "devDependencies": {
     "vite": "^8.3.6"
-  },
-  "dependencies": {
-    "@supabase/supabase-js": "^2.119.2"
   }
 }
