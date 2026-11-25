@@ -7,13 +7,16 @@ from routes.gym import gym_manager
 
 client = TestClient(app)
 
+
 @pytest.fixture(autouse=True)
 def fresh_store():
     gym_manager.gym.reset()
 
+
 def fill(n: int) -> None:
     for i in range(n):
         gym_manager.gym.session_store.add(f"user-{i}")
+
 
 # TS-4, TS-6
 def test_route_active_below_capacity():
@@ -25,12 +28,26 @@ def test_route_active_below_capacity():
     assert body["qr_active"] is True
     assert body["message"] is None
 
+
+def test_route_gym_information():
+    response = client.get("/gym/information")
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "capacity": 20,
+        "occupancy": 0,
+        "operatingHours": "",
+        "isFull": False,
+    }
+
+
 # TS-3, TS-5
 def test_route_inactive_with_message_when_full():
     fill(20)
     body = client.get("/gym/status").json()
     assert body["qr_active"] is False
     assert body["message"] == GymManager.FULL_MESSAGE
+
 
 # TS-2
 def test_route_reactivates_after_user_leaves():
