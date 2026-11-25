@@ -5,10 +5,12 @@ from pydantic import BaseModel, Field, field_validator
 
 from models.gym import Gym
 from models.gym_manager import GymManager
+from models.gym_staff import GymStaff
 
 router = APIRouter()
 
 gym_manager = GymManager(Gym())
+gym_staff = GymStaff(gym_manager.gym)
 
 
 class CheckInRequest(BaseModel):
@@ -49,21 +51,33 @@ def get_gym_status():
     return gym_manager.get_capacity_status()
 
 
+@router.get("/gym/information")
+def get_gym_information():
+    return gym_manager.gym.get_information()
+
+
 @router.post("/gym/checkin", status_code=201)
 def gym_checkin(request: CheckInRequest):
-    return gym_manager.gym.check_in(request.model_dump())
+    return gym_manager.process_check_in(request.model_dump())
 
 
 @router.post("/gym/checkout/{userId}", status_code=204)
 def gym_checkout(userId: str, request: CheckoutRequest) -> Response:
-    if not gym_manager.gym.check_out(userId, request.removedBy):
+    if request.removedBy == "staff":
+        removed = gym_staff.remove_user(userId)
+        if removed:
+            gym_manager.update_gym_list()
+    else:
+        removed = gym_manager.check_out(userId, request.removedBy)
+    if not removed:
         raise HTTPException(status_code=404, detail="User is not in the active queue.")
     return Response(status_code=204)
 
 
 @router.get("/gym/active")
 def get_gym_active() -> list[dict[str, Any]]:
-    return gym_manager.gym.get_active_queue()
+    gym_manager.update_gym_list()
+    return gym_staff.view_gym_list()
 
 
 @router.get("/gym/waitlist")
@@ -73,7 +87,7 @@ def get_gym_waitlist() -> list[dict[str, Any]]:
 
 @router.post("/gym/waitlist/{userId}/promote")
 def promote_waitlisted_user(userId: str):
-    user = gym_manager.gym.promote_from_waitlist(userId)
+    user = gym_manager.promote_from_waitlist(userId)
     if user is None:
         return {"success": False}
     return {"success": True, "user": user}
