@@ -1,6 +1,7 @@
 from fastapi import FastAPI
+from routes.gym import router as gym_router
+from routes.demo import router as demo_router   # remove when done with demo
 from fastapi.middleware.cors import CORSMiddleware
-import routes.gym as gym
 
 app = FastAPI()
 
@@ -17,7 +18,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(gym.router)
+app.include_router(gym_router)
+app.include_router(demo_router)
+
+@app.get("/")
+def root():
+    return "hello, world"
+    
 
 @app.get("/health")
 def health():

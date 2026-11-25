@@ -4,7 +4,7 @@ from models.gym_manager import GymManager
 
 router = APIRouter()
 
-gym_manager = GymManager(Gym(occupancy = 20))
+gym_manager = GymManager(Gym())
 
 @router.get("/gym/status")
 def get_gym_status():

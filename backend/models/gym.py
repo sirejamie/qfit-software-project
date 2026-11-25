@@ -1,10 +1,17 @@
+from models.session_store import InMemorySessionStore
+
+
 class Gym:
-    def __init__(
-        self, capacity: int = 20, operating_hours: str = "", occupancy: int = 0
-    ):
+    def __init__(self, capacity: int = 20, operating_hours: str = "", session_store = None):
         self.capacity = capacity
         self.operating_hours = operating_hours
-        self.occupancy = occupancy
+        self.session_store = session_store or InMemorySessionStore()
+
+    def get_operating_hours(self) -> str:
+        return self.operating_hours
+
+    def get_capacity(self) -> int:
+        return self.capacity
 
     def get_operating_hours(self) -> str:
         return self.operating_hours
@@ -13,15 +20,7 @@ class Gym:
         return self.capacity
 
     def get_occupancy(self) -> int:
-        return len(self.get_active_queue())
-
-    def is_gym_full(self) -> bool:
-        return self.get_occupancy() >= self.capacity
-
-    def get_capacity_status(self) -> dict:
-        message = "The gym is at full capacity. Please try again shortly."
-        is_full = self.is_gym_full();
-        return { "qr_active": not is_full, "message": message if is_full else None, }
+        return self.session_store.count()
 
     def get_active_queue(self) -> list[dict[str, int]]:
         return [{"james": 2}]
