@@ -53,14 +53,19 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   if (formLogin) {
-    formLogin.addEventListener('submit', (e) => {
+    formLogin.addEventListener('submit', async (e) => {
       e.preventDefault();
       clearErrors();
 
       const id = inputLoginId.value.trim();
       const pass = inputLoginPass.value.trim();
 
-      const result = window.QFitAuth.login(id, pass);
+      let result;
+      try {
+        result = await window.QFitAuth.login(id, pass);
+      } catch (error) {
+        result = { success: false, error: error.message || 'Unable to sign in.' };
+      }
 
       if (result.success) {
         successText.textContent = `Successfully signed in as ${result.user.fullName}`;

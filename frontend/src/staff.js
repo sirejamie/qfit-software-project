@@ -322,13 +322,17 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // 6. Action Listeners
-  activeSessionsTbody.addEventListener('click', (e) => {
+  activeSessionsTbody.addEventListener('click', async (e) => {
     // Check out student
     const checkoutBtn = e.target.closest('.btn-checkout');
     if (checkoutBtn) {
       const id = checkoutBtn.getAttribute('data-id');
-      window.QFitStore.removeStudent(id, { removedBy: 'staff' });
-      renderActiveSessions();
+      try {
+        await window.QFitStore.removeStudent(id, { removedBy: 'staff' });
+        renderActiveSessions();
+      } catch (error) {
+        console.error('Unable to check out student:', error);
+      }
       return;
     }
 
@@ -336,25 +340,33 @@ document.addEventListener('DOMContentLoaded', () => {
     const resyncBtn = e.target.closest('.btn-resync');
     if (resyncBtn) {
       const id = resyncBtn.getAttribute('data-id');
-      window.QFitStore.resyncStudent(id);
-      renderActiveSessions();
+      try {
+        await window.QFitStore.resyncStudent(id);
+        renderActiveSessions();
+      } catch (error) {
+        console.error('Unable to resync student:', error);
+      }
       return;
     }
   });
 
-  waitlistTbody.addEventListener('click', (e) => {
+  waitlistTbody.addEventListener('click', async (e) => {
     const admitBtn = e.target.closest('.btn-admit-waitlist');
     if (admitBtn) {
       const studentId = admitBtn.getAttribute('data-id');
-      const promoted = window.QFitStore.promoteFromWaitlist(studentId);
-      if (promoted) {
-        switchTab('active');
-      } else {
-        admitBtn.textContent = 'Gym Full (20/20)';
-        admitBtn.disabled = true;
-        setTimeout(() => {
-          renderWaitlist();
-        }, 1800);
+      try {
+        const promoted = await window.QFitStore.promoteFromWaitlist(studentId);
+        if (promoted) {
+          switchTab('active');
+        } else {
+          admitBtn.textContent = 'Gym Full (20/20)';
+          admitBtn.disabled = true;
+          setTimeout(() => {
+            renderWaitlist();
+          }, 1800);
+        }
+      } catch (error) {
+        console.error('Unable to admit waitlisted student:', error);
       }
       return;
     }
@@ -362,8 +374,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const removeBtn = e.target.closest('.btn-remove-waitlist');
     if (removeBtn) {
       const id = removeBtn.getAttribute('data-id');
-      window.QFitStore.removeWaitlistEntry(id);
-      renderWaitlist();
+      try {
+        await window.QFitStore.removeWaitlistEntry(id);
+        renderWaitlist();
+      } catch (error) {
+        console.error('Unable to remove waitlist entry:', error);
+      }
     }
   });
 
@@ -379,25 +395,35 @@ document.addEventListener('DOMContentLoaded', () => {
       const randomName = sampleNames[Math.floor(Math.random() * sampleNames.length)];
       const randomId = '620' + Math.floor(100000 + Math.random() * 900000);
 
-      window.QFitStore.addStudent({
-        fullName: randomName,
-        studentId: randomId,
-        durationMinutes: 60
-      });
+      try {
+        await window.QFitStore.addStudent({
+          fullName: randomName,
+          studentId: randomId,
+          durationMinutes: 60
+        });
+      } catch (error) {
+        console.error('Unable to add walk-in student:', error);
+      }
     });
   }
 
   // Reset Demo Data
-  btnStaffReset.addEventListener('click', () => {
-    window.QFitStore.resetDemoData();
-    renderActiveSessions();
-    renderWaitlist();
+  btnStaffReset.addEventListener('click', async () => {
+    try {
+      await window.QFitStore.resetDemoData();
+      renderActiveSessions();
+      renderWaitlist();
+    } catch (error) {
+      console.error('Unable to reset demo data:', error);
+    }
   });
 
   // 7. Store Subscription
   window.QFitStore.subscribe(() => {
-    renderActiveSessions();
-    renderWaitlist();
+    window.QFitStore.ready.then(() => {
+      renderActiveSessions();
+      renderWaitlist();
+    }).catch(error => console.error('Unable to load gym data:', error));
   });
 
   // Tick interval

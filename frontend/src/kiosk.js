@@ -64,5 +64,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Initial load
-  updateKioskView();
+  window.QFitStore.ready.then(updateKioskView)
+    .catch(error => console.error('Unable to load gym capacity:', error));
 });

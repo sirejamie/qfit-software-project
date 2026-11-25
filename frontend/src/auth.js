@@ -1,179 +1,119 @@
 /**
  * QFIT Authentication & Role Management Controller
- * Handles credentials verification, role redirection (Student vs Staff),
- * account registration, and password reset.
+ * Authentication records are managed by the API; only the current session is
+ * kept in session storage.
  */
 
 const AUTH_STORAGE_KEYS = {
-  USERS: 'qfit_registered_users',
-  CURRENT_USER: 'qfit_current_session_user'
+  CURRENT_USER: 'qfit_current_session_user',
+  API_TOKEN: 'qfit_api_token'
 };
 
-const DEFAULT_USERS = [
-  {
-    id: 'user-staff-1',
-    userIdentifier: 'STAFF101',
-    fullName: 'Coach J. Miller',
-    role: 'staff',
-    password: 'staff123',
-    email: 'staff@qfit.uwi.edu'
-  },
-  {
-    id: 'user-student-1',
-    userIdentifier: '620123456',
-    fullName: 'Alaena Sang',
-    role: 'student',
-    password: 'student123',
-    email: 'alaena.sang@mymona.uwi.edu'
-  },
-  {
-    id: 'user-student-2',
-    userIdentifier: '620198765',
-    fullName: 'Tajae Jacobs',
-    role: 'student',
-    password: 'student123',
-    email: 'tajae.jacobs@mymona.uwi.edu'
-  }
-];
+function normalizeUser(user) {
+  if (!user || typeof user !== 'object') return null;
+  return {
+    ...user,
+    userIdentifier: user.userIdentifier ?? user.user_identifier,
+    fullName: user.fullName ?? user.full_name
+  };
+}
 
 class QFitAuth {
-  constructor() {
-    this.initDatabase();
-  }
+  async login(userIdentifier, password) {
+    const result = await window.QFitApi.request('login', {
+      method: 'POST',
+      body: {
+        userIdentifier: String(userIdentifier || '').trim().toUpperCase(),
+        password: String(password || '').trim()
+      },
+      reportErrors: false
+    });
 
-  initDatabase() {
-    const raw = localStorage.getItem(AUTH_STORAGE_KEYS.USERS);
-    if (!raw) {
-      localStorage.setItem(AUTH_STORAGE_KEYS.USERS, JSON.stringify(DEFAULT_USERS));
-      return;
-    }
-    try {
-      const existing = JSON.parse(raw);
-      if (Array.isArray(existing)) {
-        let updated = false;
-        DEFAULT_USERS.forEach(defUser => {
-          const hasUser = existing.some(
-            u => u && u.userIdentifier && u.userIdentifier.toUpperCase() === defUser.userIdentifier.toUpperCase()
-          );
-          if (!hasUser) {
-            existing.push(defUser);
-            updated = true;
-          }
-        });
-        if (updated) {
-          localStorage.setItem(AUTH_STORAGE_KEYS.USERS, JSON.stringify(existing));
-        }
-      } else {
-        localStorage.setItem(AUTH_STORAGE_KEYS.USERS, JSON.stringify(DEFAULT_USERS));
-      }
-    } catch {
-      localStorage.setItem(AUTH_STORAGE_KEYS.USERS, JSON.stringify(DEFAULT_USERS));
-    }
-  }
-
-  getUsers() {
-    try {
-      return JSON.parse(localStorage.getItem(AUTH_STORAGE_KEYS.USERS)) || DEFAULT_USERS;
-    } catch {
-      return DEFAULT_USERS;
-    }
-  }
-
-  login(userIdentifier, password) {
-    const idClean = String(userIdentifier || '').trim().toUpperCase();
-    const passClean = String(password || '').trim();
-
-    const users = this.getUsers();
-    const match = users.find(u => 
-      u.userIdentifier.toUpperCase() === idClean && u.password === passClean
-    );
-
-    if (!match) {
-      return {
-        success: false,
-        error: 'Incorrect username or password. Try again.'
-      };
+    if (result?.success === false) {
+      return { success: false, error: result.error || 'Incorrect username or password. Try again.' };
     }
 
-    sessionStorage.setItem(AUTH_STORAGE_KEYS.CURRENT_USER, JSON.stringify(match));
+    const user = normalizeUser(result?.user || result);
+    if (!user || !user.userIdentifier || !user.role) {
+      throw new Error('The API login response did not include a valid user.');
+    }
+
+    const token = result.access_token || result.accessToken;
+    if (token) {
+      sessionStorage.setItem(AUTH_STORAGE_KEYS.API_TOKEN, token);
+    }
+    sessionStorage.setItem(AUTH_STORAGE_KEYS.CURRENT_USER, JSON.stringify(user));
     sessionStorage.removeItem('qfit_student_session_active');
-    const redirectUrl = match.role === 'staff' ? 'staff.html' : 'student.html';
 
     return {
       success: true,
-      user: match,
-      role: match.role,
-      redirectUrl: redirectUrl
+      user,
+      role: user.role,
+      redirectUrl: user.role === 'staff' ? 'staff.html' : 'student.html'
     };
   }
 
-  register(userData) {
-    const users = this.getUsers();
+  async register(userData) {
     const idClean = String(userData.userIdentifier || '').trim().toUpperCase();
     const fullNameClean = String(userData.fullName || '').trim();
-    const passClean = String(userData.password || '').trim();
+    const password = String(userData.password || '').trim();
 
-    if (!idClean || !fullNameClean || !passClean) {
-      return {
-        success: false,
-        error: 'Please complete all required fields.'
-      };
+    if (!idClean || !fullNameClean || !password) {
+      return { success: false, error: 'Please complete all required fields.' };
+    }
+    if (password.length < 4) {
+      return { success: false, error: 'Password must be at least 4 characters.' };
     }
 
-    if (passClean.length < 4) {
-      return {
-        success: false,
-        error: 'Password must be at least 4 characters.'
-      };
+    const result = await window.QFitApi.request('register', {
+      method: 'POST',
+      body: {
+        ...userData,
+        userIdentifier: idClean,
+        fullName: fullNameClean,
+        password,
+        email: userData.email
+          ? String(userData.email).trim()
+          : `${idClean.toLowerCase()}@qfit.uwi.edu`
+      },
+      reportErrors: false
+    });
+    const user = normalizeUser(result?.user || result);
+    if (!user || !user.userIdentifier || !user.role) {
+      throw new Error('The API registration response did not include a valid user.');
     }
 
-    const exists = users.find(u => u.userIdentifier.toUpperCase() === idClean);
-    if (exists) {
-      return {
-        success: false,
-        error: `An account with ID "${userData.userIdentifier}" is already registered.`
-      };
+    const token = result.access_token || result.accessToken;
+    if (token) {
+      sessionStorage.setItem(AUTH_STORAGE_KEYS.API_TOKEN, token);
     }
-
-    const newUser = {
-      id: 'user-' + Date.now(),
-      userIdentifier: idClean,
-      fullName: fullNameClean,
-      role: userData.role === 'staff' ? 'staff' : 'student',
-      password: passClean,
-      email: userData.email ? String(userData.email).trim() : `${idClean.toLowerCase()}@qfit.uwi.edu`
-    };
-
-    users.push(newUser);
-    localStorage.setItem(AUTH_STORAGE_KEYS.USERS, JSON.stringify(users));
-    sessionStorage.setItem(AUTH_STORAGE_KEYS.CURRENT_USER, JSON.stringify(newUser));
+    sessionStorage.setItem(AUTH_STORAGE_KEYS.CURRENT_USER, JSON.stringify(user));
     sessionStorage.removeItem('qfit_student_session_active');
 
     return {
       success: true,
-      user: newUser,
-      role: newUser.role,
-      redirectUrl: newUser.role === 'staff' ? 'staff.html' : 'student.html'
+      user,
+      role: user.role,
+      redirectUrl: user.role === 'staff' ? 'staff.html' : 'student.html'
     };
   }
 
-  resetPassword(userIdentifier, newPassword) {
-    const idClean = userIdentifier.trim().toUpperCase();
-    const users = this.getUsers();
-    const user = users.find(u => u.userIdentifier.toUpperCase() === idClean || (u.email && u.email.toUpperCase() === idClean));
-
-    if (!user) {
-      return {
-        success: false,
-        error: `No registered account found matching "${userIdentifier}".`
-      };
+  async resetPassword(userIdentifier, newPassword) {
+    const identifier = String(userIdentifier || '').trim().toUpperCase();
+    const password = String(newPassword || '').trim();
+    if (!identifier || !password) {
+      return { success: false, error: 'Please enter your account ID and a new password.' };
     }
 
-    user.password = newPassword.trim();
-    localStorage.setItem(AUTH_STORAGE_KEYS.USERS, JSON.stringify(users));
+    const result = await window.QFitApi.request('resetPassword', {
+      method: 'POST',
+      body: { userIdentifier: identifier, newPassword: password },
+      reportErrors: false
+    });
     return {
-      success: true,
-      message: `Password for ${user.fullName} has been reset successfully. You can now log in.`
+      success: result?.success !== false,
+      message: result?.message || 'Your password has been reset successfully.',
+      error: result?.error
     };
   }
 
@@ -187,6 +127,7 @@ class QFitAuth {
 
   logout() {
     sessionStorage.removeItem(AUTH_STORAGE_KEYS.CURRENT_USER);
+    sessionStorage.removeItem(AUTH_STORAGE_KEYS.API_TOKEN);
     sessionStorage.removeItem('qfit_student_session_active');
     window.location.href = 'index.html';
   }

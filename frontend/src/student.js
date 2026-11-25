@@ -134,12 +134,12 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // 2. Initial State: Always show QR Scanner when arriving / signing in
-  function evaluateCurrentState() {
+  async function evaluateCurrentState() {
     const isSessionActive = sessionStorage.getItem('qfit_student_session_active') === 'true';
     const queue = window.QFitStore.getQueue();
     const waitlist = window.QFitStore.getWaitlist();
     const pendingNotice = window.QFitStore.consumeCheckoutNotice
-      ? window.QFitStore.consumeCheckoutNotice(studentProfile.studentId)
+      ? await window.QFitStore.consumeCheckoutNotice(studentProfile.studentId)
       : null;
 
     // If student explicitly scanned and joined during this session:
@@ -330,32 +330,39 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   if (btnConfirmCameraScan) {
-    btnConfirmCameraScan.addEventListener('click', () => {
+    btnConfirmCameraScan.addEventListener('click', async () => {
       stopCamera();
-      processQueueEntry();
+      await processQueueEntry();
     });
   }
 
   // Skip feature for live demo (adds student to queue immediately)
-  btnSkipScan.addEventListener('click', () => {
+  btnSkipScan.addEventListener('click', async () => {
     stopCamera();
-    processQueueEntry();
+    await processQueueEntry();
   });
 
-  btnRetryScan.addEventListener('click', () => {
+  btnRetryScan.addEventListener('click', async () => {
     window.QFitStore.setSimulateQueueFailure(false);
-    processQueueEntry();
+    await processQueueEntry();
   });
 
   // 4. Process Queue Addition (F-01)
-  function processQueueEntry() {
+  async function processQueueEntry() {
     alertScanFailed.style.display = 'none';
     hideQueueRemovedMessage();
 
-    const result = window.QFitStore.addStudent({
-      ...studentProfile,
-      notify5MinBefore: checkNotify5Min ? checkNotify5Min.checked : true
-    });
+    let result;
+    try {
+      result = await window.QFitStore.addStudent({
+        ...studentProfile,
+        notify5MinBefore: checkNotify5Min ? checkNotify5Min.checked : true
+      });
+    } catch (error) {
+      scanFailReason.textContent = error.message || 'System failed to add you to the queue. Please scan the QR code again.';
+      alertScanFailed.style.display = 'flex';
+      return;
+    }
 
     if (result.success) {
       sessionStorage.setItem('qfit_student_session_active', 'true');
@@ -389,14 +396,14 @@ document.addEventListener('DOMContentLoaded', () => {
     timerStudentName.textContent = student.fullName;
     timerStudentDetails.textContent = `ID: ${student.studentId}`;
 
-    function tick() {
+    async function tick() {
       const queue = window.QFitStore.getQueue();
       const updated = queue.find(s => s.id === student.id || s.studentId === student.studentId);
 
       if (!updated) {
         clearInterval(timerInterval);
         if (window.QFitStore.consumeCheckoutNotice) {
-          window.QFitStore.consumeCheckoutNotice(studentProfile.studentId);
+          await window.QFitStore.consumeCheckoutNotice(studentProfile.studentId);
         }
         showScanner();
         showQueueRemovedMessage('You have been removed from the queue.');
@@ -438,22 +445,32 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    tick();
-    timerInterval = setInterval(tick, 1000);
+    tick().catch(error => console.error('Unable to refresh checkout notice:', error));
+    timerInterval = setInterval(() => {
+      tick().catch(error => console.error('Unable to refresh checkout notice:', error));
+    }, 1000);
   }
 
-  btnStudentResync.addEventListener('click', () => {
+  btnStudentResync.addEventListener('click', async () => {
     if (currentActiveStudent) {
-      window.QFitStore.resyncStudent(currentActiveStudent.studentId);
-      alertTimerDesync.style.display = 'none';
+      try {
+        await window.QFitStore.resyncStudent(currentActiveStudent.studentId);
+        alertTimerDesync.style.display = 'none';
+      } catch (error) {
+        console.error('Unable to resync student timer:', error);
+      }
     }
   });
 
-  btnCheckoutSession.addEventListener('click', () => {
+  btnCheckoutSession.addEventListener('click', async () => {
     const targetId = currentActiveStudent ? currentActiveStudent.id : studentProfile.studentId;
-    window.QFitStore.removeStudent(targetId, { removedBy: 'self' });
-    showScanner();
-    showQueueRemovedMessage('You have been removed from the queue.');
+    try {
+      await window.QFitStore.removeStudent(targetId, { removedBy: 'self' });
+      showScanner();
+      showQueueRemovedMessage('You have been removed from the queue.');
+    } catch (error) {
+      console.error('Unable to check out student:', error);
+    }
   });
 
   // 6. Waitlist UI Logic (Capacity = 20)
@@ -534,9 +551,13 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   if (checkNotify5Min) {
-    checkNotify5Min.addEventListener('change', () => {
+    checkNotify5Min.addEventListener('change', async () => {
       if (window.QFitStore.updateWaitlistNotification) {
-        window.QFitStore.updateWaitlistNotification(studentProfile.studentId, checkNotify5Min.checked);
+        try {
+          await window.QFitStore.updateWaitlistNotification(studentProfile.studentId, checkNotify5Min.checked);
+        } catch (error) {
+          console.error('Unable to update waitlist notification:', error);
+        }
       }
       if (!checkNotify5Min.checked) {
         hideNotificationPopup();
@@ -545,38 +566,58 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   if (btnSimulate5MinNotify) {
-    btnSimulate5MinNotify.addEventListener('click', () => {
+    btnSimulate5MinNotify.addEventListener('click', async () => {
       if (checkNotify5Min && !checkNotify5Min.checked) {
         checkNotify5Min.checked = true;
         if (window.QFitStore.updateWaitlistNotification) {
-          window.QFitStore.updateWaitlistNotification(studentProfile.studentId, true);
+          try {
+            await window.QFitStore.updateWaitlistNotification(studentProfile.studentId, true);
+          } catch (error) {
+            console.error('Unable to update waitlist notification:', error);
+            return;
+          }
         }
       }
       triggerFiveMinuteWaitlistPopup(true);
     });
   }
 
-  btnClaimSlot.addEventListener('click', () => {
-    const promoted = window.QFitStore.promoteFromWaitlist(studentProfile.studentId);
-    if (promoted) {
-      hideNotificationPopup();
-      currentActiveStudent = promoted;
-      showActiveTimer(promoted);
-    } else {
-      showNotificationPopup('Gym Still at Capacity', 'Please wait until an active student checks out.', '⚠️');
+  btnClaimSlot.addEventListener('click', async () => {
+    try {
+      const promoted = await window.QFitStore.promoteFromWaitlist(studentProfile.studentId);
+      if (promoted) {
+        hideNotificationPopup();
+        currentActiveStudent = promoted;
+        showActiveTimer(promoted);
+      } else {
+        showNotificationPopup('Gym Still at Capacity', 'Please wait until an active student checks out.', '⚠️');
+      }
+    } catch (error) {
+      console.error('Unable to claim gym slot:', error);
     }
   });
 
-  btnLeaveWaitlist.addEventListener('click', () => {
+  btnLeaveWaitlist.addEventListener('click', async () => {
     hideNotificationPopup();
-    window.QFitStore.removeWaitlistEntry(studentProfile.studentId);
-    showScanner();
-    showQueueRemovedMessage('You have been removed from the waitlist.');
+    try {
+      await window.QFitStore.removeWaitlistEntry(studentProfile.studentId);
+      showScanner();
+      showQueueRemovedMessage('You have been removed from the waitlist.');
+    } catch (error) {
+      console.error('Unable to leave waitlist:', error);
+    }
   });
 
   // 7. Store Subscription
-  window.QFitStore.subscribe((event) => {
-    if (event.type === 'STUDENT_REMOVED') {
+  window.QFitStore.subscribe(async (event) => {
+    if (event.type === 'STUDENT_ADDED') {
+      const added = event.payload || {};
+      if (added.studentId === studentProfile.studentId) {
+        sessionStorage.setItem('qfit_student_session_active', 'true');
+        currentActiveStudent = added;
+        showActiveTimer(added);
+      }
+    } else if (event.type === 'STUDENT_REMOVED') {
       const removed = event.payload || {};
       const isCurrentStudent =
         removed.studentId === studentProfile.studentId ||
@@ -587,7 +628,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const stillInQueue = queue.some(s => s.studentId === studentProfile.studentId);
         if (!stillInQueue && currentActiveStudent) {
           if (window.QFitStore.consumeCheckoutNotice) {
-            window.QFitStore.consumeCheckoutNotice(studentProfile.studentId);
+            await window.QFitStore.consumeCheckoutNotice(studentProfile.studentId);
           }
           showScanner();
           showQueueRemovedMessage('You have been removed from the queue.');
@@ -614,11 +655,20 @@ document.addEventListener('DOMContentLoaded', () => {
         currentActiveStudent = promoted;
         showActiveTimer(promoted);
       }
+    } else if (event.type === 'WAITLIST_UPDATED') {
+      const waitlist = window.QFitStore.getWaitlist();
+      const inWait = waitlist.find(s => s.studentId === studentProfile.studentId);
+      if (inWait) {
+        showWaitlist(inWait);
+      } else if (viewWaitlist.style.display === 'block' && !currentActiveStudent) {
+        showScanner();
+      }
     } else if (event.type === 'DEMO_RESET') {
       evaluateCurrentState();
     }
   });
 
   // Initial load
-  evaluateCurrentState();
+  window.QFitStore.ready.then(evaluateCurrentState)
+    .catch(error => console.error('Unable to load student queue state:', error));
 });

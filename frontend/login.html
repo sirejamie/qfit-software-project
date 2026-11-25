@@ -475,8 +475,8 @@
       </div>
     </div>
 
+    <script src="/src/api.js"></script>
     <script src="/src/auth.js"></script>
-    <script src="/src/store.js"></script>
     <script>
       document.addEventListener("DOMContentLoaded", () => {
         const formLogin = document.getElementById("form-login");
@@ -522,14 +522,18 @@
           inputLoginPass.classList.remove("is-invalid");
         }
 
-        formLogin.addEventListener("submit", (e) => {
+        formLogin.addEventListener("submit", async (e) => {
           e.preventDefault();
           clearErrors();
 
           const id = inputLoginId.value.trim();
           const pass = inputLoginPass.value.trim();
-
-          const result = window.QFitAuth.login(id, pass);
+          let result;
+          try {
+            result = await window.QFitAuth.login(id, pass);
+          } catch (error) {
+            result = { success: false, error: error.message || "Unable to sign in." };
+          }
 
           if (result.success) {
             successText.textContent = `Successfully signed in as ${result.user.fullName}`;
@@ -588,7 +592,7 @@
         );
 
         // Signup form
-        formSignup.addEventListener("submit", (e) => {
+        formSignup.addEventListener("submit", async (e) => {
           e.preventDefault();
           signupErrorBanner.style.display = "none";
           signupSuccessBanner.style.display = "none";
@@ -611,7 +615,12 @@
             password: pass,
           };
 
-          const res = window.QFitAuth.register(data);
+          let res;
+          try {
+            res = await window.QFitAuth.register(data);
+          } catch (error) {
+            res = { success: false, error: error.message || "Unable to register." };
+          }
           if (res.success) {
             signupSuccessText.textContent = `Account registered! Successfully signed in as ${res.user.fullName}`;
             signupSuccessBanner.style.display = "flex";
@@ -627,7 +636,7 @@
         // Forgot password form
         document
           .getElementById("form-forgot")
-          .addEventListener("submit", (e) => {
+          .addEventListener("submit", async (e) => {
             e.preventDefault();
             const banner = document.getElementById("forgot-alert-banner");
             const text = document.getElementById("forgot-alert-text");
@@ -639,7 +648,12 @@
               "forgot-new-password",
             ).value;
 
-            const res = window.QFitAuth.resetPassword(id, newPass);
+            let res;
+            try {
+              res = await window.QFitAuth.resetPassword(id, newPass);
+            } catch (error) {
+              res = { success: false, error: error.message || "Unable to reset password." };
+            }
             if (res.success) {
               banner.className = "alert alert-success";
               icon.textContent = "✅";
