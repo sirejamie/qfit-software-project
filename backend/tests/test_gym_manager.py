@@ -6,7 +6,7 @@ from models.gym_manager import GymManager
 def make_gym(people_inside: int) -> Gym:
     gym = Gym()
     for i in range(people_inside):
-        gym.session_store.add(f"student-{i}")
+        gym.session_store.add(f"user-{i}")
     return gym
 
 # TS-1
@@ -26,7 +26,7 @@ def test_count_updates_when_user_leaves():
 
     assert manager.is_gym_full() is True
 
-    gym.session_store.remove("student-0")
+    gym.session_store.remove("user-0")
 
     assert gym.get_occupancy() == 19
     assert manager.is_gym_full() is False

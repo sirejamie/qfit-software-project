@@ -3,19 +3,18 @@
 
 from fastapi import APIRouter
 
-from models.session_store import InMemorySessionStore
 from routes.gym import gym_manager
 
 router = APIRouter(prefix="/demo", tags=["demo (temporary)"])
 
-@router.post("/checkin/{student_id}")
-def demo_check_in(student_id: str):
-    gym_manager.gym.session_store.add(student_id)
+@router.post("/checkin/{user_id}")
+def demo_check_in(user_id: str):
+    gym_manager.gym.session_store.add(user_id)
     return gym_manager.get_capacity_status()
 
-@router.post("/checkout/{student_id}")
-def demo_check_out(student_id: str):
-    gym_manager.gym.session_store.remove(student_id)
+@router.post("/checkout/{user_id}")
+def demo_check_out(user_id: str):
+    gym_manager.gym.session_store.remove(user_id)
     return gym_manager.get_capacity_status()
 
 @router.post("/fill/{n}")
@@ -26,5 +25,5 @@ def demo_fill(n: int):
 
 @router.post("/reset")
 def demo_reset():
-    gym_manager.gym.session_store = InMemorySessionStore()
+    gym_manager.gym.reset()
     return gym_manager.get_capacity_status()
