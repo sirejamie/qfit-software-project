@@ -1,23 +1,23 @@
 const defaultApiConfig = {
-  baseUrl: '/api',
+  baseUrl: "/api",
   pollIntervalMs: 5000,
   routes: {
-    status: '/gym/status',
-    queue: '/gym/active',
-    waitlist: '/gym/waitlist',
-    settings: '/gym/settings',
-    checkIn: '/gym/checkin',
-    checkout: '/gym/checkout/{studentId}',
-    promote: '/gym/waitlist/{studentId}/promote',
-    removeWaitlist: '/gym/waitlist/{studentId}',
-    updateWaitlist: '/gym/waitlist/{studentId}',
-    resync: '/gym/active/{studentId}/resync',
-    reset: '/demo/reset',
-    checkoutNotice: '/gym/notices/{studentId}',
-    login: '/auth/login',
-    register: '/auth/register',
-    resetPassword: '/auth/password/reset'
-  }
+    status: "/gym/status",
+    queue: "/gym/active",
+    waitlist: "/gym/waitlist",
+    settings: "/gym/settings",
+    checkIn: "/gym/checkin",
+    checkout: "/gym/checkout/{userId}",
+    promote: "/gym/waitlist/{userId}/promote",
+    removeWaitlist: "/gym/waitlist/{userId}",
+    updateWaitlist: "/gym/waitlist/{userId}",
+    resync: "/gym/active/{userId}/resync",
+    reset: "/demo/reset",
+    checkoutNotice: "/gym/notices/{userId}",
+    login: "/auth/login",
+    register: "/auth/register",
+    resetPassword: "/auth/password/reset",
+  },
 };
 
 const suppliedConfig = window.QFitApiConfig || {};

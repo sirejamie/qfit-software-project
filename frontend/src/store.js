@@ -16,26 +16,28 @@ function toTimestamp(value) {
   return Number.isNaN(parsed) ? 0 : parsed;
 }
 
-function normalizeStudent(student, isWaitlistEntry = false) {
-  if (!student || typeof student !== 'object') {
-    throw new Error('The API returned an invalid student record.');
+function normalizeUser(user, isWaitlistEntry = false) {
+  console.log(user);
+
+  if (!user || typeof user !== 'object') {
+    throw new Error('The API returned an invalid user record.');
   }
 
   const normalized = {
-    ...student,
-    studentId: student.studentId ?? student.student_id,
-    fullName: student.fullName ?? student.full_name,
-    joinedAt: toTimestamp(student.joinedAt ?? student.joined_at),
-    addedAt: toTimestamp(student.addedAt ?? student.added_at),
-    durationMinutes: student.durationMinutes ?? student.duration_minutes ?? 60,
-    notify5MinBefore: student.notify5MinBefore ?? student.notify_5_min_before ?? false,
-    syncFailed: student.syncFailed ?? student.sync_failed ?? false
+    userId: user.userId ?? user.user_id,
+    fullName: user.fullName ?? user.full_name,
+    joinedAt: toTimestamp(user.joinedAt ?? user.joined_at),
+    addedAt: toTimestamp(user.addedAt ?? user.added_at),
+    durationMinutes: user.durationMinutes ?? user.duration_minutes ?? 60,
+    notify5MinBefore: user.notify5MinBefore ?? user.notify_5_min_before ?? false,
+    syncFailed: user.syncFailed ?? user.sync_failed ?? false
   };
-  normalized.id = normalized.id || normalized.studentId;
+  normalized.id = normalized.id || normalized.userId;
 
   const timestamp = isWaitlistEntry ? normalized.addedAt : normalized.joinedAt;
-  if (!normalized.studentId || !normalized.fullName || !timestamp) {
-    throw new Error('The API student record is missing its ID, name, or entry timestamp.');
+
+  if (!normalized.userId || !normalized.fullName || !timestamp) {
+    throw new Error('The API user record is missing its ID, name, or entry timestamp.');
   }
   return normalized;
 }
@@ -89,8 +91,8 @@ class QFitStore {
       throw new Error('The API did not return gym capacity status.');
     }
 
-    const nextQueue = getItems(queueResponse, 'queue').map(student => normalizeStudent(student));
-    const nextWaitlist = getItems(waitlistResponse, 'waitlist').map(student => normalizeStudent(student, true));
+    const nextQueue = getItems(queueResponse, 'queue').map(user => normalizeUser(user));
+    const nextWaitlist = getItems(waitlistResponse, 'waitlist').map(user => normalizeUser(user, true));
     const previousQueue = this.queue;
     const previousWaitlist = this.waitlist;
 
@@ -110,33 +112,33 @@ class QFitStore {
     };
 
     if (previousQueue && previousWaitlist) {
-      const currentQueueIds = new Set(nextQueue.map(student => student.id || student.studentId));
-      const previousQueueIds = new Set(previousQueue.map(student => student.id || student.studentId));
-      const removedStudents = previousQueue.filter(student =>
-        !currentQueueIds.has(student.id || student.studentId)
+      const currentQueueIds = new Set(nextQueue.map(user => user.id || user.userId));
+      const previousQueueIds = new Set(previousQueue.map(user => user.id || user.userId));
+      const removedUsers = previousQueue.filter(user =>
+        !currentQueueIds.has(user.id || user.userId)
       );
-      const addedStudents = nextQueue.filter(student =>
-        !previousQueueIds.has(student.id || student.studentId)
+      const addedUsers = nextQueue.filter(user =>
+        !previousQueueIds.has(user.id || user.userId)
       );
-      const currentStudentIds = new Set(nextQueue.map(student => student.studentId));
+      const currentUserIds = new Set(nextQueue.map(user => user.userId));
 
-      addedStudents.forEach(student => {
-        this.notifyListeners({ type: 'STUDENT_ADDED', payload: student });
+      addedUsers.forEach(user => {
+        this.notifyListeners({ type: 'USER_ADDED', payload: user });
       });
 
-      removedStudents.forEach(student => {
-        this.notifyListeners({ type: 'STUDENT_REMOVED', payload: student });
+      removedUsers.forEach(user => {
+        this.notifyListeners({ type: 'USER_REMOVED', payload: user });
       });
 
       previousWaitlist
-        .filter(student => currentStudentIds.has(student.studentId))
-        .forEach(student => {
-          const promotedStudent = nextQueue.find(active => active.studentId === student.studentId);
-          this.notifyListeners({ type: 'WAITLIST_PROMOTED', payload: { student: promotedStudent } });
+        .filter(user => currentUserIds.has(user.userId))
+        .forEach(user => {
+          const promotedUser = nextQueue.find(active => active.userId === user.userId);
+          this.notifyListeners({ type: 'WAITLIST_PROMOTED', payload: { user: promotedUser } });
         });
 
-      if (removedStudents.length > 0) {
-        this.notifyListeners({ type: 'SLOT_AVAILABLE', payload: { nextStudent: nextWaitlist[0] } });
+      if (removedUsers.length > 0) {
+        this.notifyListeners({ type: 'SLOT_AVAILABLE', payload: { nextUser: nextWaitlist[0] } });
       }
 
       if (JSON.stringify(previousWaitlist) !== JSON.stringify(nextWaitlist)) {
@@ -192,115 +194,118 @@ class QFitStore {
     return [...(this.waitlist || [])].sort((a, b) => a.addedAt - b.addedAt);
   }
 
-  async addStudent(studentData) {
+  async addUser(userData) {
     if (this.shouldSimulateQueueFailure()) {
       return {
         success: false,
         error: 'SYSTEM_FAIL',
-        message: 'System failed to add student to queue. Please rescan the QR code.'
+        message: 'System failed to add user to queue. Please rescan the QR code.'
       };
     }
 
     const result = await window.QFitApi.request('checkIn', {
       method: 'POST',
-      body: studentData
+      body: userData
     });
+
     await this.refresh();
     if (result?.success === false) return result;
-    if (!result?.student || !['active', 'waitlist'].includes(result.status)) {
-      throw new Error('The API check-in response did not include a valid student and queue status.');
+    if (!result?.user || !['active', 'waitlist'].includes(result.status)) {
+      throw new Error('The API check-in response did not include a valid user and queue status.');
     }
+
+    console.log(normalizeUser(result.user))
     return {
       ...result,
-      student: normalizeStudent(result.student, result.status === 'waitlist')
+      user: normalizeUser(result.user, result.status === 'waitlist')
     };
   }
 
-  async promoteFromWaitlist(studentId) {
+  async promoteFromWaitlist(userId) {
     const response = await window.QFitApi.request('promote', {
       method: 'POST',
-      pathParams: { studentId }
+      pathParams: { userId }
     });
     await this.refresh();
     if (response?.success === false) return false;
-    if (!response?.student) {
-      throw new Error('The API promotion response did not include the promoted student.');
+    if (!response?.user) {
+      throw new Error('The API promotion response did not include the promoted user.');
     }
-    return normalizeStudent(response.student);
+    return normalizeUser(response.user);
   }
 
-  async getCheckoutNotices(studentId) {
-    return window.QFitApi.request('checkoutNotice', { pathParams: { studentId } });
+  async getCheckoutNotices(userId) {
+    return window.QFitApi.request('checkoutNotice', { pathParams: { userId } });
   }
 
-  async consumeCheckoutNotice(studentId) {
-    const notice = await this.getCheckoutNotices(studentId);
+  async consumeCheckoutNotice(userId) {
+    const notice = await this.getCheckoutNotices(userId);
     if (notice) {
       await window.QFitApi.request('checkoutNotice', {
         method: 'DELETE',
-        pathParams: { studentId }
+        pathParams: { userId }
       });
     }
     return notice;
   }
 
-  async removeStudent(idOrStudentId, options = {}) {
-    const student = this.getQueue().find(item =>
-      item.id === idOrStudentId || item.studentId === idOrStudentId
+  async removeUser(idOrUserId, options = {}) {
+    const user = this.getQueue().find(item =>
+      item.id === idOrUserId || item.userId === idOrUserId
     );
-    if (!student) return false;
+    if (!user) return false;
 
     const response = await window.QFitApi.request('checkout', {
       method: 'POST',
-      pathParams: { studentId: student.studentId },
+      pathParams: { userId: user.userId },
       body: { removedBy: options.removedBy || 'self' }
     });
     await this.refresh();
     return response?.success !== false;
   }
 
-  async removeWaitlistEntry(idOrStudentId) {
+  async removeWaitlistEntry(idOrUserId) {
     const entry = this.getWaitlist().find(item =>
-      item.id === idOrStudentId || item.studentId === idOrStudentId
+      item.id === idOrUserId || item.userId === idOrUserId
     );
     if (!entry) return false;
 
     await window.QFitApi.request('removeWaitlist', {
       method: 'DELETE',
-      pathParams: { studentId: entry.studentId }
+      pathParams: { userId: entry.userId }
     });
     await this.refresh();
     return true;
   }
 
-  async updateWaitlistNotification(studentId, notify5MinBefore) {
+  async updateWaitlistNotification(userId, notify5MinBefore) {
     const result = await window.QFitApi.request('updateWaitlist', {
       method: 'PATCH',
-      pathParams: { studentId },
+      pathParams: { userId },
       body: { notify5MinBefore: Boolean(notify5MinBefore) }
     });
     await this.refresh();
     return result;
   }
 
-  async toggleStudentSyncStatus(idOrStudentId, forceSyncFailed) {
-    const student = this.getQueue().find(item =>
-      item.id === idOrStudentId || item.studentId === idOrStudentId
+  async toggleUserSyncStatus(idOrUserId, forceSyncFailed) {
+    const user = this.getQueue().find(item =>
+      item.id === idOrUserId || item.userId === idOrUserId
     );
-    if (!student) return false;
+    if (!user) return false;
 
-    const syncFailed = forceSyncFailed !== undefined ? forceSyncFailed : !student.syncFailed;
+    const syncFailed = forceSyncFailed !== undefined ? forceSyncFailed : !user.syncFailed;
     const result = await window.QFitApi.request('resync', {
       method: 'PATCH',
-      pathParams: { studentId: student.studentId },
+      pathParams: { userId: user.userId },
       body: { syncFailed }
     });
     await this.refresh();
     return result;
   }
 
-  resyncStudent(idOrStudentId) {
-    return this.toggleStudentSyncStatus(idOrStudentId, false);
+  resyncUser(idOrUserId) {
+    return this.toggleUserSyncStatus(idOrUserId, false);
   }
 
   setSimulateQueueFailure(shouldFail) {

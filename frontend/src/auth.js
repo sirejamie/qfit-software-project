@@ -43,13 +43,13 @@ class QFitAuth {
       sessionStorage.setItem(AUTH_STORAGE_KEYS.API_TOKEN, token);
     }
     sessionStorage.setItem(AUTH_STORAGE_KEYS.CURRENT_USER, JSON.stringify(user));
-    sessionStorage.removeItem('qfit_student_session_active');
+    sessionStorage.removeItem('qfit_user_session_active');
 
     return {
       success: true,
       user,
       role: user.role,
-      redirectUrl: user.role === 'staff' ? 'staff.html' : 'student.html'
+      redirectUrl: user.role === 'staff' ? 'staff.html' : 'user.html'
     };
   }
 
@@ -88,13 +88,13 @@ class QFitAuth {
       sessionStorage.setItem(AUTH_STORAGE_KEYS.API_TOKEN, token);
     }
     sessionStorage.setItem(AUTH_STORAGE_KEYS.CURRENT_USER, JSON.stringify(user));
-    sessionStorage.removeItem('qfit_student_session_active');
+    sessionStorage.removeItem('qfit_user_session_active');
 
     return {
       success: true,
       user,
       role: user.role,
-      redirectUrl: user.role === 'staff' ? 'staff.html' : 'student.html'
+      redirectUrl: user.role === 'staff' ? 'staff.html' : 'user.html'
     };
   }
 
@@ -128,7 +128,7 @@ class QFitAuth {
   logout() {
     sessionStorage.removeItem(AUTH_STORAGE_KEYS.CURRENT_USER);
     sessionStorage.removeItem(AUTH_STORAGE_KEYS.API_TOKEN);
-    sessionStorage.removeItem('qfit_student_session_active');
+    sessionStorage.removeItem('qfit_user_session_active');
     window.location.href = 'index.html';
   }
 }

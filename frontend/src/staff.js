@@ -87,7 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Update Counts & Badges
     countTabActive.textContent = `${rawQueue.length} / ${capacity.maxCapacity}`;
     badgeNavActive.textContent = rawQueue.length;
-    topOccupancyBadge.textContent = `Occupancy: ${rawQueue.length} / ${capacity.maxCapacity} Students`;
+    topOccupancyBadge.textContent = `Occupancy: ${rawQueue.length} / ${capacity.maxCapacity} Users`;
 
     if (capacity.isFull) {
       topOccupancyBadge.className = 'badge badge-danger';
@@ -101,20 +101,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const sortMode = sortTimer.value;
     const now = Date.now();
 
-    let list = rawQueue.map(student => {
-      const elapsedMs = now - student.joinedAt;
-      const totalMs = student.durationMinutes * 60 * 1000;
+    let list = rawQueue.map(user => {
+      const elapsedMs = now - user.joinedAt;
+      const totalMs = user.durationMinutes * 60 * 1000;
       const remainingMs = totalMs - elapsedMs;
       const remainingMins = Math.round(remainingMs / (60 * 1000));
       const isExpired = remainingMs <= 0;
-      return { ...student, remainingMs, remainingMins, isExpired };
+      return { ...user, remainingMs, remainingMins, isExpired };
     });
 
     // Apply Search
     if (query) {
       list = list.filter(s =>
         s.fullName.toLowerCase().includes(query) ||
-        s.studentId.toLowerCase().includes(query)
+        s.userId.toLowerCase().includes(query)
       );
     }
 
@@ -129,7 +129,7 @@ document.addEventListener('DOMContentLoaded', () => {
       list = list.filter(s => s.remainingMins <= 30);
     }
 
-    // Apply Sorting (Expired students prioritized at top when time-asc)
+    // Apply Sorting (Expired users prioritized at top when time-asc)
     list.sort((a, b) => {
       if (sortMode === 'time-asc') {
         // Expired sessions highlighted at the very top of queue
@@ -153,15 +153,15 @@ document.addEventListener('DOMContentLoaded', () => {
     activeEmptyState.style.display = 'none';
 
     let html = '';
-    list.forEach((student, index) => {
-      const entryTimeStr = new Date(student.joinedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      const initials = student.fullName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-      const expiredClass = student.isExpired ? 'expired-row' : '';
+    list.forEach((user, index) => {
+      const entryTimeStr = new Date(user.joinedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const initials = user.fullName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+      const expiredClass = user.isExpired ? 'expired-row' : '';
 
       html += `
-        <tr id="row-${student.id}" class="${expiredClass}" data-id="${student.id}" data-joined="${student.joinedAt}" data-duration="${student.durationMinutes}">
+        <tr id="row-${user.id}" class="${expiredClass}" data-id="${user.id}" data-joined="${user.joinedAt}" data-duration="${user.durationMinutes}">
           <td>
-            <span style="font-weight: 900; color: ${student.isExpired ? 'var(--primary-600)' : 'var(--gray-700)'}; font-size: 1rem;">
+            <span style="font-weight: 900; color: ${user.isExpired ? 'var(--primary-600)' : 'var(--gray-700)'}; font-size: 1rem;">
               #${index + 1}
             </span>
           </td>
@@ -169,25 +169,25 @@ document.addEventListener('DOMContentLoaded', () => {
             <div style="display: flex; align-items: center; gap: 0.65rem;">
               <div class="avatar-circle" style="width: 34px; height: 34px; font-size: 0.8rem;">${initials}</div>
               <div>
-                <div style="font-weight: 800; color: var(--gray-900); font-size: 0.95rem;">${escapeHtml(student.fullName)}</div>
-                <div style="font-size: 0.775rem; color: var(--gray-500); font-family: monospace;">ID: ${escapeHtml(student.studentId)}</div>
+                <div style="font-weight: 800; color: var(--gray-900); font-size: 0.95rem;">${escapeHtml(user.fullName)}</div>
+                <div style="font-size: 0.775rem; color: var(--gray-500); font-family: monospace;">ID: ${escapeHtml(user.userId)}</div>
               </div>
             </div>
           </td>
           <td>
             <div style="font-size: 0.875rem; font-weight: 600; color: var(--gray-700);">${entryTimeStr}</div>
-            <div style="font-size: 0.725rem; color: var(--gray-400);">${student.durationMinutes} min limit</div>
+            <div style="font-size: 0.725rem; color: var(--gray-400);">${user.durationMinutes} min limit</div>
           </td>
           <td>
-            <div id="timer-${student.id}" class="timer-badge ${student.isExpired ? 'expired' : 'active'}">
+            <div id="timer-${user.id}" class="timer-badge ${user.isExpired ? 'expired' : 'active'}">
               Calculating...
             </div>
           </td>
           <td>
-            ${renderSyncColumn(student)}
+            ${renderSyncColumn(user)}
           </td>
           <td style="text-align: right;">
-            <button class="btn btn-danger btn-sm btn-checkout" data-id="${student.id}" title="Check out student to free gym capacity">
+            <button class="btn btn-danger btn-sm btn-checkout" data-id="${user.id}" title="Check out user to free gym capacity">
               Check Out
             </button>
           </td>
@@ -199,8 +199,8 @@ document.addEventListener('DOMContentLoaded', () => {
     updateAllTimers();
   }
 
-  function renderSyncColumn(student) {
-    if (student.syncFailed) {
+  function renderSyncColumn(user) {
+    if (user.syncFailed) {
       return `
         <div style="display: flex; align-items: center; gap: 0.4rem;">
           <span class="badge badge-warning" style="background: #fef3c7; color: #92400e; border: 1px solid #fde68a;">
@@ -211,7 +211,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </svg>
             Out of Sync
           </span>
-          <button class="btn btn-secondary btn-sm btn-resync" data-id="${student.id}" style="font-size: 0.75rem; padding: 0.2rem 0.5rem;" title="Resync timer with student portal">
+          <button class="btn btn-secondary btn-sm btn-resync" data-id="${user.id}" style="font-size: 0.75rem; padding: 0.2rem 0.5rem;" title="Resync timer with user portal">
             🔄 Resync
           </button>
         </div>
@@ -226,10 +226,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const now = Date.now();
 
     rows.forEach(row => {
-      const studentId = row.getAttribute('data-id');
+      const userId = row.getAttribute('data-id');
       const joinedAt = parseInt(row.getAttribute('data-joined'), 10);
       const durationMin = parseInt(row.getAttribute('data-duration'), 10);
-      const timerElement = document.getElementById(`timer-${studentId}`);
+      const timerElement = document.getElementById(`timer-${userId}`);
 
       if (!timerElement) return;
 
@@ -292,7 +292,7 @@ document.addEventListener('DOMContentLoaded', () => {
               <div class="avatar-circle" style="width: 34px; height: 34px; font-size: 0.8rem;">${initials}</div>
               <div>
                 <div style="font-weight: 800; color: var(--gray-900); font-size: 0.95rem;">${escapeHtml(entry.fullName)}</div>
-                <div style="font-size: 0.775rem; color: var(--gray-500); font-family: monospace;">ID: ${escapeHtml(entry.studentId)}</div>
+                <div style="font-size: 0.775rem; color: var(--gray-500); font-family: monospace;">ID: ${escapeHtml(entry.userId)}</div>
               </div>
             </div>
           </td>
@@ -306,7 +306,7 @@ document.addEventListener('DOMContentLoaded', () => {
           </td>
           <td style="text-align: right;">
             <div style="display: flex; justify-content: flex-end; gap: 0.4rem;">
-              <button class="btn btn-success btn-sm btn-admit-waitlist" data-id="${entry.studentId}" title="Admit to active gym queue">
+              <button class="btn btn-success btn-sm btn-admit-waitlist" data-id="${entry.userId}" title="Admit to active gym queue">
                 ✅ Admit
               </button>
               <button class="btn btn-secondary btn-sm btn-remove-waitlist" data-id="${entry.id}">
@@ -323,15 +323,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 6. Action Listeners
   activeSessionsTbody.addEventListener('click', async (e) => {
-    // Check out student
+    // Check out user
     const checkoutBtn = e.target.closest('.btn-checkout');
     if (checkoutBtn) {
       const id = checkoutBtn.getAttribute('data-id');
       try {
-        await window.QFitStore.removeStudent(id, { removedBy: 'staff' });
+        await window.QFitStore.removeUser(id, { removedBy: 'staff' });
         renderActiveSessions();
       } catch (error) {
-        console.error('Unable to check out student:', error);
+        console.error('Unable to check out user:', error);
       }
       return;
     }
@@ -341,10 +341,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (resyncBtn) {
       const id = resyncBtn.getAttribute('data-id');
       try {
-        await window.QFitStore.resyncStudent(id);
+        await window.QFitStore.resyncUser(id);
         renderActiveSessions();
       } catch (error) {
-        console.error('Unable to resync student:', error);
+        console.error('Unable to resync user:', error);
       }
       return;
     }
@@ -353,9 +353,9 @@ document.addEventListener('DOMContentLoaded', () => {
   waitlistTbody.addEventListener('click', async (e) => {
     const admitBtn = e.target.closest('.btn-admit-waitlist');
     if (admitBtn) {
-      const studentId = admitBtn.getAttribute('data-id');
+      const userId = admitBtn.getAttribute('data-id');
       try {
-        const promoted = await window.QFitStore.promoteFromWaitlist(studentId);
+        const promoted = await window.QFitStore.promoteFromWaitlist(userId);
         if (promoted) {
           switchTab('active');
         } else {
@@ -366,7 +366,7 @@ document.addEventListener('DOMContentLoaded', () => {
           }, 1800);
         }
       } catch (error) {
-        console.error('Unable to admit waitlisted student:', error);
+        console.error('Unable to admit waitlisted user:', error);
       }
       return;
     }
@@ -396,13 +396,13 @@ document.addEventListener('DOMContentLoaded', () => {
       const randomId = '620' + Math.floor(100000 + Math.random() * 900000);
 
       try {
-        await window.QFitStore.addStudent({
+        await window.QFitStore.addUser({
           fullName: randomName,
-          studentId: randomId,
+          userId: randomId,
           durationMinutes: 60
         });
       } catch (error) {
-        console.error('Unable to add walk-in student:', error);
+        console.error('Unable to add walk-in user:', error);
       }
     });
   }
