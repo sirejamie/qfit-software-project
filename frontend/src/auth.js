@@ -14,7 +14,8 @@ function normalizeUser(user) {
   return {
     ...user,
     userIdentifier: user.userIdentifier ?? user.user_identifier,
-    fullName: user.fullName ?? user.full_name
+    fullName: user.fullName ?? user.full_name,
+    isBlacklisted: user.isBlacklisted ?? user.is_blacklisted ?? user.BLACKLISTED ?? false
   };
 }
 

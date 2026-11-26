@@ -1,9 +1,11 @@
+import os
 from typing import Literal
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field, field_validator
 
 from constants.demo_users import DEMO_USERS
+from lib.supabase_client import get_supabase_client
 
 router = APIRouter()
 
@@ -49,8 +51,29 @@ class PasswordResetRequest(BaseModel):
         return value
 
 
-def _public_user(user: dict[str, str]) -> dict[str, str]:
+def _public_user(user: dict[str, object]) -> dict[str, object]:
     return {key: value for key, value in user.items() if key != "password"}
+
+
+def is_user_blacklisted(user_identifier: str) -> bool:
+    if os.getenv("STORE_BACKEND", "memory").strip().lower() != "supabase":
+        return False
+
+    users = (
+        get_supabase_client()
+        .table("users")
+        .select("is_blacklisted")
+        .eq("user_identifier", user_identifier)
+        .limit(1)
+        .execute()
+        .data
+    )
+    if not users:
+        raise HTTPException(
+            status_code=500,
+            detail="Unable to load the account status from Supabase.",
+        )
+    return bool(users[0].get("is_blacklisted", False))
 
 
 @router.post("/auth/login")
@@ -66,7 +89,9 @@ def auth_login(request: LoginRequest):
     )
     if user is None:
         raise HTTPException(status_code=401, detail="Incorrect username or password. Try again.")
-    return {"user": _public_user(user)}
+    public_user = _public_user(user)
+    public_user["isBlacklisted"] = is_user_blacklisted(request.userIdentifier)
+    return {"user": public_user}
 
 
 @router.post("/auth/register", status_code=201)

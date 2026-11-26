@@ -10,10 +10,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const staffNameSidebar = document.getElementById('staff-name-sidebar');
   const staffTopName = document.getElementById('staff-top-name');
   const btnLogout = document.getElementById('btn-staff-logout');
+  const blacklistBanner = document.getElementById('alert-blacklisted-staff');
 
   if (authUser) {
     if (staffNameSidebar) staffNameSidebar.textContent = authUser.fullName;
     if (staffTopName) staffTopName.textContent = authUser.fullName;
+    if (blacklistBanner && authUser.isBlacklisted === true) {
+      blacklistBanner.style.display = 'flex';
+    }
   }
 
   if (btnLogout) {

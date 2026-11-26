@@ -10,8 +10,9 @@ client = TestClient(app)
 
 
 @pytest.fixture(autouse=True)
-def restore_demo_users():
+def restore_demo_users(monkeypatch):
     original_users = deepcopy(DEMO_USERS)
+    monkeypatch.setenv("STORE_BACKEND", "memory")
     yield
     DEMO_USERS[:] = original_users
 
@@ -34,7 +35,43 @@ def test_demo_accounts_can_log_in(identifier, password, expected_role):
     body = response.json()
     assert body["user"]["userIdentifier"] == identifier
     assert body["user"]["role"] == expected_role
+    assert body["user"]["isBlacklisted"] is False
     assert "password" not in body["user"]
+
+
+def test_supabase_login_returns_blacklist_status(monkeypatch):
+    class FakeQuery:
+        def select(self, columns):
+            assert columns == "is_blacklisted"
+            return self
+
+        def eq(self, column, value):
+            assert column == "user_identifier"
+            assert value == "620123456"
+            return self
+
+        def limit(self, count):
+            assert count == 1
+            return self
+
+        def execute(self):
+            return type("Response", (), {"data": [{"is_blacklisted": True}]})()
+
+    class FakeClient:
+        def table(self, name):
+            assert name == "users"
+            return FakeQuery()
+
+    monkeypatch.setenv("STORE_BACKEND", "supabase")
+    monkeypatch.setattr("routes.auth.get_supabase_client", FakeClient)
+
+    response = client.post(
+        "/auth/login",
+        json={"userIdentifier": "620123456", "password": "user123"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["user"]["isBlacklisted"] is True
 
 
 def test_demo_login_rejects_invalid_credentials():
