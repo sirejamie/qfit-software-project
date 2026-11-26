@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>QFIT - Staff Management Dashboard</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+    <style>
+      .avatar-circle {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        background: var(--primary-100);
+        color: var(--primary-700);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 0.95rem;
+        border: 1.5px solid var(--primary-300);
+        flex-shrink: 0;
+      }
+      .filter-bar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.25rem;
+        background: var(--white);
+        padding: 1rem 1.25rem;
+        border-radius: var(--radius-md);
+        border: 1px solid var(--gray-200);
+      }
+    </style>
+  </head>
+  <body style="background: #f8fafc">
+    <div class="staff-app-layout">
+      <!-- ================= SIDEBAR (Modeled after Reference Image) ================= -->
+      <aside class="staff-sidebar">
+        <div>
+          <!-- Brand -->
+          <div class="staff-sidebar-brand">
+            <span class="brand-logo">QFIT</span>
+            <div>
+              <h2
+                style="
+                  font-size: 1.05rem;
+                  font-weight: 900;
+                  color: var(--gray-900);
+                  line-height: 1.1;
+                "
+              >
+                Staff Portal
+              </h2>
+            </div>
+          </div>
+
+          <!-- Navigation Links -->
+          <ul class="staff-nav-list">
+            <li class="staff-nav-item active" id="nav-tab-active">
+              <span>🏋️ Active Sessions</span>
+              <span id="badge-nav-active" class="badge badge-primary">19</span>
+            </li>
+            <li class="staff-nav-item" id="nav-tab-waitlist">
+              <span>📋 Waitlist</span>
+              <span id="badge-nav-waitlist" class="badge badge-secondary"
+                >0</span
+              >
+            </li>
+          </ul>
+        </div>
+
+        <div>
+          <button
+            id="btn-staff-logout"
+            class="btn btn-secondary btn-block"
+            style="font-size: 0.85rem; padding: 0.6rem"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+              <polyline points="16 17 21 12 16 7"></polyline>
+              <line x1="21" y1="12" x2="9" y2="12"></line>
+            </svg>
+            Log Out
+          </button>
+        </div>
+      </aside>
+
+      <!-- ================= MAIN CONTENT AREA ================= -->
+      <main class="staff-main-content">
+        <!-- Top Header -->
+        <header class="staff-topbar">
+          <div>
+            <h1
+              style="
+                font-size: 1.6rem;
+                font-weight: 900;
+                color: var(--gray-900);
+                letter-spacing: -0.5px;
+              "
+            >
+              Gym Facility Management
+            </h1>
+            <p style="font-size: 0.85rem; color: var(--gray-500)">
+              Real-time monitoring of active users, timers, and waitlist
+              capacity.
+            </p>
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 1rem">
+            <div
+              class="badge badge-success"
+              id="top-occupancy-badge"
+              style="font-size: 0.85rem; padding: 0.4rem 0.85rem"
+            >
+              Occupancy: 19 / 20 Users
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.5rem">
+              <div
+                class="avatar-circle"
+                style="
+                  background: var(--primary-500);
+                  color: white;
+                  border: none;
+                "
+              >
+                JM
+              </div>
+              <span
+                id="staff-top-name"
+                style="
+                  font-weight: 700;
+                  font-size: 0.9rem;
+                  color: var(--gray-800);
+                "
+                >Coach J. Miller</span
+              >
+            </div>
+          </div>
+        </header>
+
+        <div style="padding: 1.75rem 2rem">
+          <!-- Two Tabs (Active Gym Sessions vs Waitlist) -->
+          <div class="staff-tab-bar">
+            <button class="staff-tab active" id="tab-active-sessions">
+              <span>Active Gym Sessions</span>
+              <span class="staff-tab-count" id="count-tab-active">19</span>
+            </button>
+            <button class="staff-tab" id="tab-waitlist">
+              <span>Waitlist</span>
+              <span class="staff-tab-count" id="count-tab-waitlist">0</span>
+            </button>
+          </div>
+
+          <!-- Filter, Search, and Sort Toolbar -->
+          <div class="filter-bar">
+            <!-- Search Input -->
+            <div style="flex: 1; min-width: 250px">
+              <input
+                type="text"
+                id="filter-search"
+                class="form-control"
+                placeholder="Search user by name or ID..."
+              />
+            </div>
+
+            <!-- Expiration Range Filter -->
+            <div
+              style="
+                display: flex;
+                align-items: center;
+                gap: 0.4rem;
+                font-size: 0.85rem;
+              "
+            >
+              <label
+                for="filter-expiration"
+                style="font-weight: 700; color: var(--gray-700)"
+                >Filter:</label
+              >
+              <select
+                id="filter-expiration"
+                class="form-control"
+                style="width: auto; padding: 0.5rem 0.75rem; font-size: 0.85rem"
+              >
+                <option value="all" selected>All Sessions</option>
+                <option value="expired">Expired Only</option>
+                <option value="10">&lt; 10 Mins Remaining</option>
+                <option value="15">&lt; 15 Mins Remaining</option>
+                <option value="30">&lt; 30 Mins Remaining</option>
+              </select>
+            </div>
+
+            <!-- Sorting -->
+            <div
+              style="
+                display: flex;
+                align-items: center;
+                gap: 0.4rem;
+                font-size: 0.85rem;
+              "
+            >
+              <label
+                for="sort-timer"
+                style="font-weight: 700; color: var(--gray-700)"
+                >Sort:</label
+              >
+              <select
+                id="sort-timer"
+                class="form-control"
+                style="width: auto; padding: 0.5rem 0.75rem; font-size: 0.85rem"
+              >
+                <option value="time-asc" selected>
+                  Remaining Time (Lowest First)
+                </option>
+                <option value="time-desc">
+                  Remaining Time (Highest First)
+                </option>
+                <option value="arrival-asc">
+                  Arrival Order (Earliest First)
+                </option>
+              </select>
+            </div>
+
+            <div style="display: flex; gap: 0.4rem">
+              <button id="btn-staff-reset" class="btn btn-secondary btn-sm">
+                🔄 Reset Demo Data
+              </button>
+            </div>
+          </div>
+
+          <!-- ================= PANEL 1: ACTIVE GYM SESSIONS ================= -->
+          <div id="panel-active-sessions" class="motion-fade-in">
+            <div class="card" style="padding: 0; overflow: hidden">
+              <div class="table-responsive">
+                <table class="queue-table">
+                  <thead>
+                    <tr>
+                      <th style="width: 70px">Queue #</th>
+                      <th>User Details</th>
+                      <th>Entry Time</th>
+                      <th>Remaining Time (Live Timer)</th>
+                      <th>Timer Sync Status</th>
+                      <th style="text-align: right">Staff Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="active-sessions-tbody">
+                    <!-- Dynamically populated via staff.js -->
+                  </tbody>
+                </table>
+              </div>
+              <div
+                id="active-empty-state"
+                style="
+                  display: none;
+                  text-align: center;
+                  padding: 3rem;
+                  color: var(--gray-500);
+                "
+              >
+                <h3>No active users match the current filter.</h3>
+              </div>
+            </div>
+          </div>
+
+          <!-- ================= PANEL 2: WAITLIST ================= -->
+          <div id="panel-waitlist" class="motion-fade-in" style="display: none">
+            <div class="card" style="padding: 0; overflow: hidden">
+              <div class="table-responsive">
+                <table class="queue-table">
+                  <thead>
+                    <tr>
+                      <th style="width: 80px">Waitlist #</th>
+                      <th>User Details</th>
+                      <th>Time Added</th>
+                      <th>5-Min Notification</th>
+                      <th style="text-align: right">Staff Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="waitlist-tbody">
+                    <!-- Dynamically populated via staff.js -->
+                  </tbody>
+                </table>
+              </div>
+              <div
+                id="waitlist-empty-state"
+                style="
+                  display: none;
+                  text-align: center;
+                  padding: 3rem;
+                  color: var(--gray-500);
+                "
+              >
+                <h3>The waitlist is currently empty.</h3>
+                <p style="font-size: 0.85rem; margin-top: 0.25rem">
+                  Users will automatically be placed here when gym reaches
+                  capacity (20 users).
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <script src="/src/api.js"></script>
+    <script src="/src/auth.js"></script>
+    <script src="/src/store.js"></script>
+    <script src="/src/staff.js"></script>
+  </body>
+</html>

@@ -1,0 +1,511 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>QFIT - User Portal</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+    <style>
+      .scanner-viewport {
+        width: 100%;
+        height: 270px;
+        background: #18181b;
+        border-radius: var(--radius-lg);
+        border: 3px dashed var(--primary-500);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: var(--white);
+        margin: 1.25rem 0;
+        position: relative;
+        overflow: hidden;
+      }
+      .scanner-video-feed {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 1;
+      }
+      .scanner-laser {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background: var(--primary-500);
+        box-shadow: 0 0 12px 3px rgba(220, 38, 38, 0.9);
+        animation: laserSweep 2.2s infinite ease-in-out;
+        z-index: 5;
+      }
+      .scanner-overlay {
+        position: relative;
+        z-index: 4;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        pointer-events: none;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Top Navigation -->
+    <nav class="navbar">
+      <a href="user.html" class="brand">
+        <div class="brand-logo">QFIT</div>
+        <div class="brand-text">
+          <h1>User Portal</h1>
+          <span id="user-role-text">Member</span>
+        </div>
+      </a>
+      <div class="nav-links">
+        <span
+          id="user-header-name"
+          style="
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--gray-800);
+            background: var(--gray-100);
+            padding: 0.35rem 0.65rem;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--gray-200);
+          "
+        >
+          👤 Alaena Sang
+        </span>
+        <button id="btn-user-logout" class="nav-btn" style="cursor: pointer">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+            <polyline points="16 17 21 12 16 7"></polyline>
+            <line x1="21" y1="12" x2="9" y2="12"></line>
+          </svg>
+          Sign Out
+        </button>
+      </div>
+    </nav>
+
+    <main class="mobile-container">
+      <aside
+        id="alert-queue-removed"
+        class="alert alert-success"
+        style="display: none; text-align: left"
+      >
+        <span id="queue-removed-text"
+          >You have been removed from the queue.</span
+        >
+      </aside>
+
+      <!-- ================= STEP 1: QR CODE SCANNER PAGE ================= -->
+      <div
+        id="view-scanner"
+        class="card motion-scale-in"
+        style="text-align: center"
+      >
+        <h2
+          style="
+            font-size: 1.45rem;
+            font-weight: 900;
+            color: var(--gray-900);
+            margin-bottom: 0.25rem;
+          "
+        >
+          Scan Gym QR Code
+        </h2>
+        <p style="font-size: 0.875rem; color: var(--gray-600)">
+          Scan the QR code displayed to check in.
+        </p>
+
+        <!-- Sync Failure / Rescan Alert (F-01 SR-2, AC-2) -->
+        <div
+          id="alert-scan-failed"
+          class="alert alert-danger"
+          style="display: none; text-align: left; margin-top: 1rem"
+        >
+          <span>⚠️</span>
+          <div>
+            <strong>Backend Sync Failed:</strong><br />
+            <span id="scan-fail-reason"
+              >Unable to add you to the queue. Please scan the QR code
+              again.</span
+            >
+            <div style="margin-top: 0.5rem">
+              <button id="btn-retry-scan" class="btn btn-sm btn-danger">
+                📷 Scan QR Code Again
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Camera Error / Permission Banner -->
+        <div
+          id="alert-camera-error"
+          class="alert alert-warning"
+          style="display: none; text-align: left; margin-top: 1rem"
+        >
+          <span>📷</span>
+          <div>
+            <strong>Camera Unavailable:</strong><br />
+            <span id="camera-error-reason"
+              >Unable to access your device camera. Please allow camera
+              permissions and try again.</span
+            >
+            <div
+              id="camera-newtab-wrap"
+              style="display: none; margin-top: 0.5rem"
+            >
+              <a
+                href="user.html"
+                target="_blank"
+                rel="noopener"
+                class="btn btn-sm btn-secondary"
+              >
+                Open Scanner in New Tab
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- QR Code Image / Camera Scanner Viewport -->
+        <div
+          class="scanner-viewport"
+          id="scanner-box"
+          style="background: #ffffff; border: 2px solid var(--gray-200)"
+        >
+          <video
+            id="scanner-video"
+            class="scanner-video-feed"
+            autoplay
+            playsinline
+            muted
+            style="display: none"
+          ></video>
+          <div
+            class="scanner-laser"
+            id="scanner-laser"
+            style="display: none"
+          ></div>
+          <div class="scanner-overlay" id="scanner-placeholder">
+            <img
+              src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 25 25' width='210' height='210'%3E%3Crect width='25' height='25' fill='%23ffffff'/%3E%3Cpath fill='%2318181b' d='M1 1h7v7H1zm1 1v5h5V2zm1 1h3v3H3zM17 1h7v7h-7zm1 1v5h5V2zm1 1h3v3h-3zM1 17h7v7H1zm1 1v5h5v-5zm1 1h3v3H3zM9 1h2v1H9zm3 0h1v2h-1zm2 1h2v1h-2zM9 3h1v2H9zm2 1h2v1h-2zm3 0h1v2h-1zM9 6h2v1H9zm3 0h1v2h-1zm2 0h2v1h-2zM1 9h1v2H1zm2 0h2v1H3zm3 0h2v2H6zm3 0h1v1H9zm2 0h2v2h-2zm3 0h2v1h-2zm3 0h2v2h-2zm3 0h2v1h-2zm3 0h1v2h-1zM2 11h2v2H2zm3 1h1v2H5zm3-1h2v2H8zm3 1h2v1h-2zm3-1h2v2h-2zm3 1h1v2h-1zm3-1h2v2h-2zM1 14h2v2H1zm3 0h2v1H4zm3 1h2v1H7zm3-1h1v2h-1zm2 0h2v1h-2zm3 1h2v1h-2zm3-1h2v2h-2zm3 0h2v1h-2zM9 17h2v2H9zm3 1h2v1h-2zm3-1h2v2h-2zm3 0h2v1h-2zm3 1h2v2h-2zM9 20h1v2H9zm2-1h2v2h-2zm3 1h1v2h-1zm2-1h2v2h-2zm3 1h2v1h-2zm3 0h1v2h-1zM10 22h2v2h-2zm3 0h2v2h-2zm3 1h2v1h-2zm3-1h2v2h-2z'/%3E%3C/svg%3E"
+              alt="QFIT Gym Entrance QR Code"
+              style="
+                width: 210px;
+                height: 210px;
+                object-fit: contain;
+                display: block;
+              "
+            />
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div style="display: flex; flex-direction: column; gap: 0.75rem">
+          <button
+            id="btn-confirm-camera-scan"
+            class="btn btn-success btn-block"
+            style="display: none"
+          >
+            Complete QR Scan & Join Queue
+          </button>
+
+          <button id="btn-trigger-camera" class="btn btn-secondary btn-block">
+            Open Camera Scanner
+          </button>
+
+          <!-- Skip Feature for Live Demo -->
+          <button
+            id="btn-skip-scan"
+            class="btn btn-primary btn-block"
+            style="font-size: 0.95rem; padding: 0.85rem"
+          >
+            Skip QR Scanner & Join Queue (Demo Feature)
+          </button>
+        </div>
+      </div>
+
+      <!-- ================= STEP 2: ACTIVE TIMER UI ================= -->
+      <div
+        id="view-timer"
+        class="card motion-scale-in"
+        style="display: none; text-align: center"
+      >
+        <div class="card-header">
+          <h2 class="card-title">Active Gym Session</h2>
+        </div>
+
+        <!-- Desync Warning Alert (F-02 SR-3) -->
+        <div
+          id="alert-timer-desync"
+          class="alert alert-warning"
+          style="display: none; text-align: left"
+        >
+          <span>⚠️</span>
+          <div>
+            <strong>Timer Out of Sync:</strong><br />
+            Your session timer is currently out of sync with the gym staff
+            dashboard.
+            <div style="margin-top: 0.5rem">
+              <button id="btn-user-resync" class="btn btn-sm btn-secondary">
+                🔄 Resync with Staff Dashboard
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Success Toast upon queue addition -->
+        <div
+          id="alert-queue-success"
+          class="alert alert-success"
+          style="display: none; text-align: left"
+        >
+          <span>✅</span>
+          <div>Successfully verified and added to the gym session queue!</div>
+        </div>
+
+        <div style="margin-bottom: 0.5rem">
+          <h3
+            id="timer-user-name"
+            style="
+              font-size: 1.45rem;
+              font-weight: 900;
+              color: var(--primary-700);
+            "
+          >
+            Alaena Sang
+          </h3>
+          <p
+            id="timer-user-details"
+            style="
+              font-size: 0.85rem;
+              color: var(--gray-500);
+              font-family: monospace;
+            "
+          >
+            ID: 620123456
+          </p>
+        </div>
+
+        <!-- Circular Timer Display -->
+        <div id="user-timer-circle" class="user-timer-circle">
+          <span id="user-countdown-text" class="user-timer-time"
+            >59:59</span
+          >
+          <span id="user-timer-status-text" class="user-timer-label"
+            >Time Remaining</span
+          >
+        </div>
+
+        <div
+          id="timer-info-banner"
+          class="alert alert-info"
+          style="font-size: 0.85rem; text-align: left; margin: 1.25rem 0"
+        >
+          <span id="timer-info-text"
+            >Your timer is synchronized with the staff dashboard. Please
+            complete your workout before time expires.</span
+          >
+        </div>
+
+        <button
+          id="btn-checkout-session"
+          class="btn btn-danger btn-block"
+          style="padding: 0.85rem"
+        >
+          Finish Workout & Leave Gym
+        </button>
+      </div>
+
+      <!-- ================= STEP 3: WAITLIST UI (CAPACITY REACHED) ================= -->
+      <div
+        id="view-waitlist"
+        class="card motion-scale-in"
+        style="display: none; text-align: center"
+      >
+        <div style="font-size: 3rem; margin-bottom: 0.5rem">📋</div>
+        <div class="badge badge-danger" style="margin-bottom: 0.75rem">
+          Gym at Full Capacity (20/20)
+        </div>
+
+        <h2
+          style="
+            font-size: 1.4rem;
+            font-weight: 900;
+            color: var(--gray-900);
+            margin-bottom: 0.35rem;
+          "
+        >
+          You Are on the Waitlist
+        </h2>
+        <p
+          style="
+            font-size: 0.875rem;
+            color: var(--gray-600);
+            margin-bottom: 1.25rem;
+          "
+        >
+          The gym has reached its capacity limit of 20 users. You have been
+          placed in the admission queue.
+        </p>
+
+        <div class="waitlist-card">
+          <div
+            style="
+              font-size: 0.8rem;
+              font-weight: 800;
+              color: var(--gray-500);
+              text-transform: uppercase;
+            "
+          >
+            Your Waitlist Position
+          </div>
+          <div id="waitlist-pos-number" class="waitlist-position-badge">#1</div>
+          <div
+            id="waitlist-ahead-text"
+            style="font-size: 0.9rem; font-weight: 700; color: var(--gray-700)"
+          >
+            0 people ahead of you
+          </div>
+          <div
+            id="waitlist-est-time"
+            style="
+              font-size: 0.8rem;
+              color: var(--primary-600);
+              margin-top: 0.35rem;
+              font-weight: 600;
+            "
+          >
+            Estimated Wait: ~3 minutes
+          </div>
+        </div>
+
+        <!-- 5-Minute Notification Preference Toggle -->
+        <div
+          class="card"
+          style="
+            padding: 1rem;
+            text-align: left;
+            background: var(--gray-50);
+            border: 1.5px solid var(--gray-200);
+            margin-bottom: 1.25rem;
+          "
+        >
+          <label
+            style="
+              display: flex;
+              align-items: flex-start;
+              gap: 0.6rem;
+              cursor: pointer;
+              font-size: 0.875rem;
+            "
+          >
+            <input
+              type="checkbox"
+              id="check-notify-5min"
+              checked
+              style="margin-top: 0.2rem"
+            />
+            <div>
+              <strong>Receive notification 5 mins before entry</strong>
+              <div style="font-size: 0.775rem; color: var(--gray-500)">
+                This will let you know when the person ahead of you has five
+                minutes remaining in their session.
+              </div>
+            </div>
+          </label>
+          <div
+            style="
+              margin-top: 0.75rem;
+              padding-top: 0.75rem;
+              border-top: 1px solid var(--gray-200);
+            "
+          >
+            <button
+              type="button"
+              id="btn-simulate-5min-notify"
+              class="btn btn-secondary btn-sm btn-block"
+            >
+              Simulate 5-Min Notification (Demo)
+            </button>
+          </div>
+        </div>
+
+        <!-- Ready to Enter Gym Action (Triggered when someone leaves) -->
+        <div
+          id="waitlist-ready-banner"
+          class="alert alert-success"
+          style="
+            display: none;
+            text-align: left;
+            flex-direction: column;
+            gap: 0.75rem;
+          "
+        >
+          <div style="display: flex; align-items: center; gap: 0.5rem">
+            <span style="font-size: 1.4rem">🎉</span>
+            <div>
+              <strong>A gym slot has opened up!</strong><br />
+              It is your turn to enter the gym.
+            </div>
+          </div>
+          <button id="btn-claim-slot" class="btn btn-success btn-block">
+            🏋️ Enter Gym Queue Now &rarr;
+          </button>
+        </div>
+
+        <button id="btn-leave-waitlist" class="btn btn-secondary btn-block">
+          Cancel & Leave Waitlist
+        </button>
+      </div>
+    </main>
+
+    <footer>
+      <p>&copy; 2026 - 2027 QFIT - All Rights Reserved.</p>
+    </footer>
+
+    <!-- Floating Pop-up Notification Toast -->
+    <div
+      id="qfit-toast-notification"
+      class="qfit-toast"
+      role="alert"
+      aria-live="assertive"
+      style="display: none"
+    >
+      <div class="qfit-toast-icon" id="qfit-toast-icon">🔔</div>
+      <div class="qfit-toast-body">
+        <div class="qfit-toast-title" id="qfit-toast-title">
+          5-Minute Entry Reminder
+        </div>
+        <div class="qfit-toast-message" id="qfit-toast-message">
+          The person ahead of you has 5 minutes remaining in their session.
+        </div>
+      </div>
+      <button
+        type="button"
+        id="qfit-toast-close"
+        class="qfit-toast-close"
+        aria-label="Dismiss notification"
+      >
+        &times;
+      </button>
+    </div>
+
+    <script src="/src/api.js"></script>
+    <script src="/src/auth.js"></script>
+    <script src="/src/store.js"></script>
+    <script src="/src/user.js"></script>
+  </body>
+</html>
