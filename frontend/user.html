@@ -100,6 +100,19 @@
 
     <main class="mobile-container">
       <aside
+        id="alert-blacklisted"
+        class="alert alert-danger"
+        role="alert"
+        style="display: none; text-align: left"
+      >
+        <span>⚠️</span>
+        <span
+          >Your account is blacklisted. Please contact gym staff for
+          assistance.</span
+        >
+      </aside>
+
+      <aside
         id="alert-queue-removed"
         class="alert alert-success"
         style="display: none; text-align: left"
@@ -113,7 +126,7 @@
       <div
         id="view-scanner"
         class="card motion-scale-in"
-        style="text-align: center"
+        style="display: none; text-align: center"
       >
         <h2
           style="

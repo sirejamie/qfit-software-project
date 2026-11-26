@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field, field_validator
 from models.gym import Gym
 from models.gym_manager import GymManager
 from models.gym_staff import GymStaff
+from routes.auth import is_user_blacklisted
 
 router = APIRouter()
 
@@ -58,11 +59,13 @@ def get_gym_information():
 
 @router.post("/gym/checkin", status_code=201)
 def gym_checkin(request: CheckInRequest):
+    _ensure_user_can_join(request.userId)
     return gym_manager.process_check_in(request.model_dump())
 
 
 @router.post("/gym/active", status_code=201)
 def add_active_user(request: CheckInRequest):
+    _ensure_user_can_join(request.userId)
     try:
         user = gym_manager.add_to_active_queue(request.model_dump())
     except ValueError as error:
@@ -72,6 +75,7 @@ def add_active_user(request: CheckInRequest):
 
 @router.post("/gym/waitlist", status_code=201)
 def add_waitlisted_user(request: CheckInRequest):
+    _ensure_user_can_join(request.userId)
     try:
         user = gym_manager.add_to_waitlist_queue(request.model_dump())
     except ValueError as error:
@@ -105,6 +109,7 @@ def get_gym_waitlist() -> list[dict[str, Any]]:
 
 @router.post("/gym/waitlist/{userId}/promote")
 def promote_waitlisted_user(userId: str):
+    _ensure_user_can_join(userId)
     user = gym_manager.promote_from_waitlist(userId)
     if user is None:
         return {"success": False}
@@ -163,3 +168,11 @@ def get_checkout_notice(userId: str):
 def consume_checkout_notice(userId: str) -> Response:
     gym_manager.gym.session_store.consume_checkout_notice(userId)
     return Response(status_code=204)
+
+
+def _ensure_user_can_join(user_id: str) -> None:
+    if is_user_blacklisted(user_id):
+        raise HTTPException(
+            status_code=403,
+            detail="Blacklisted accounts cannot join the gym queue.",
+        )

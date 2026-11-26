@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const headerName = document.getElementById('user-header-name');
   const scannerMemberName = document.getElementById('scanner-member-name');
   const btnLogout = document.getElementById('btn-user-logout');
+  const blacklistBanner = document.getElementById('alert-blacklisted');
 
   const userProfile = authUser ? {
     fullName: authUser.fullName,
@@ -19,6 +20,11 @@ document.addEventListener('DOMContentLoaded', () => {
     userId: '620123456',
     durationMinutes: 60
   };
+  const isBlacklisted = authUser?.isBlacklisted === true;
+
+  if (blacklistBanner && isBlacklisted) {
+    blacklistBanner.style.display = 'flex';
+  }
 
   if (headerName) headerName.textContent = `👤 ${userProfile.fullName}`;
   if (scannerMemberName) scannerMemberName.textContent = userProfile.fullName;
@@ -35,6 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const viewScanner = document.getElementById('view-scanner');
   const viewTimer = document.getElementById('view-timer');
   const viewWaitlist = document.getElementById('view-waitlist');
+  if (!isBlacklisted) viewScanner.style.display = 'block';
 
   // Scanner elements
   const btnSkipScan = document.getElementById('btn-skip-scan');
@@ -172,6 +179,14 @@ document.addEventListener('DOMContentLoaded', () => {
     hasShownWaitlist5MinPopup = false;
     sessionStorage.removeItem('qfit_user_session_active');
 
+    if (isBlacklisted) {
+      stopCamera();
+      viewScanner.style.display = 'none';
+      viewTimer.style.display = 'none';
+      viewWaitlist.style.display = 'none';
+      return;
+    }
+
     viewScanner.style.display = 'block';
     viewTimer.style.display = 'none';
     viewWaitlist.style.display = 'none';
@@ -181,6 +196,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 3. Camera Scanner & Live Stream Handling
   async function startCamera() {
+    if (isBlacklisted) return;
+
     if (cameraStream) {
       stopCamera();
       return;
@@ -349,6 +366,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 4. Process Queue Addition (F-01)
   async function processQueueEntry() {
+    if (isBlacklisted) return;
+
     alertScanFailed.style.display = 'none';
     hideQueueRemovedMessage();
 
@@ -583,6 +602,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   btnClaimSlot.addEventListener('click', async () => {
+    if (isBlacklisted) return;
+
     try {
       const promoted = await window.QFitStore.promoteFromWaitlist(userProfile.userId);
       if (promoted) {

@@ -86,6 +86,34 @@ def test_checkin_persists_a_valid_active_user_record():
     assert client.get("/gym/status").json()["current_count"] == 1
 
 
+@pytest.mark.parametrize(
+    ("path", "payload"),
+    [
+        ("/gym/checkin", {"userId": "blocked-user", "fullName": "Blocked User"}),
+        ("/gym/active", {"userId": "blocked-user", "fullName": "Blocked User"}),
+        ("/gym/waitlist", {"userId": "blocked-user", "fullName": "Blocked User"}),
+        ("/gym/waitlist/blocked-user/promote", None),
+    ],
+)
+def test_blacklisted_users_cannot_join_or_be_promoted(path, payload, monkeypatch):
+    monkeypatch.setattr("routes.gym.is_user_blacklisted", lambda _user_id: True)
+
+    response = client.post(path, json=payload)
+
+    assert response.status_code == 403
+    assert client.get("/gym/active").json() == []
+    assert client.get("/gym/waitlist").json() == []
+
+
+def test_blacklisted_users_cannot_join_through_demo_checkin(monkeypatch):
+    monkeypatch.setattr("routes.demo.is_user_blacklisted", lambda _user_id: True)
+
+    response = client.post("/demo/checkin/blocked-user")
+
+    assert response.status_code == 403
+    assert client.get("/gym/active").json() == []
+
+
 def test_full_capacity_checkin_is_persisted_to_waitlist():
     fill(20)
 
