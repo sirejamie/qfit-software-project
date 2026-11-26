@@ -7,13 +7,16 @@ from routes.gym import gym_manager
 
 client = TestClient(app)
 
+
 @pytest.fixture(autouse=True)
 def fresh_store():
     gym_manager.gym.reset()
 
+
 def fill(n: int) -> None:
     for i in range(n):
         gym_manager.gym.session_store.add(f"user-{i}")
+
 
 # TS-4, TS-6
 def test_route_active_below_capacity():
@@ -25,12 +28,26 @@ def test_route_active_below_capacity():
     assert body["qr_active"] is True
     assert body["message"] is None
 
+
+def test_route_gym_information():
+    response = client.get("/gym/information")
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "capacity": 20,
+        "occupancy": 0,
+        "operatingHours": "",
+        "isFull": False,
+    }
+
+
 # TS-3, TS-5
 def test_route_inactive_with_message_when_full():
     fill(20)
     body = client.get("/gym/status").json()
     assert body["qr_active"] is False
     assert body["message"] == GymManager.FULL_MESSAGE
+
 
 # TS-2
 def test_route_reactivates_after_user_leaves():
@@ -83,6 +100,42 @@ def test_full_capacity_checkin_is_persisted_to_waitlist():
     assert body["user"]["userId"] == "waiting-user"
     assert body["user"]["addedAt"]
     assert len(client.get("/gym/waitlist").json()) == 1
+
+
+def test_staff_can_add_users_to_specific_queues():
+    gym_manager.gym.capacity = 1
+    active = client.post(
+        "/gym/active",
+        json={"userId": "active-user", "fullName": "Active User"},
+    )
+    waiting = client.post(
+        "/gym/waitlist",
+        json={"userId": "waiting-user", "fullName": "Waiting User"},
+    )
+
+    assert active.status_code == 201
+    assert active.json()["user"]["userId"] == "active-user"
+    assert waiting.status_code == 201
+    assert waiting.json()["user"]["userId"] == "waiting-user"
+    assert [user["userId"] for user in client.get("/gym/active").json()] == [
+        "active-user"
+    ]
+    assert [user["userId"] for user in client.get("/gym/waitlist").json()] == [
+        "waiting-user"
+    ]
+
+
+def test_manual_active_add_rejects_full_capacity_without_waitlisting():
+    gym_manager.gym.capacity = 1
+    fill(1)
+
+    response = client.post(
+        "/gym/active",
+        json={"userId": "extra-user", "fullName": "Extra User"},
+    )
+
+    assert response.status_code == 409
+    assert client.get("/gym/waitlist").json() == []
 
 
 def test_checkout_and_waitlist_promotion_update_mock_database():

@@ -1,0 +1,12 @@
+services:
+  backend:
+    build:
+      context: .
+    ports:
+      - "8000:8000"
+    environment:
+      STORE_BACKEND: ${STORE_BACKEND:-memory}
+      SUPABASE_URL: ${SUPABASE_URL:-}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY:-}
+      SUPABASE_KEY: ${SUPABASE_KEY:-}
+    restart: unless-stopped
